@@ -1,65 +1,172 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
+import { Plus, ChevronRight, MapPin, Calendar } from "lucide-react";
+
+type Trip = {
+  id: string;
+  title: string;
+  start_date: string | null;
+  end_date: string | null;
+  cover_photo_url: string | null;
+};
 
 export default function Home() {
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    async function fetchTrips() {
+      try {
+        const { data, error } = await supabase
+          .from("trips")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        setTrips(data || []);
+      } catch (err) {
+        console.error("Error fetching trips:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTrips();
+  }, []);
+
+  const activeTrip = trips[0];
+  const pastTrips = trips.slice(1);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="min-h-screen bg-gray-50 px-36 py-8 font-sans text-gray-900">
+      <header className="mb-8 flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          Pravas
+        </h1>
+        <div className="h-8 w-8 rounded-full bg-gray-200"></div>
+      </header>
+
+      {/* Active Trip */}
+      {activeTrip ? (
+        <section className="mb-10">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500">
+              Continue
+            </h2>
+          </div>
+
+          <div className="relative overflow-hidden rounded-2xl bg-white shadow-lg transition-transform active:scale-[0.98]">
+            <div className="p-6">
+              <div className="mb-1 flex items-center gap-2 text-blue-600">
+                <MapPin className="h-4 w-4" />
+                <span className="text-xs font-bold uppercase tracking-wide">
+                  Current Trip
+                </span>
+              </div>
+              <h3 className="mb-2 text-2xl font-bold text-gray-900">
+                {activeTrip.title}
+              </h3>
+              <p className="mb-6 text-sm text-gray-500">
+                {activeTrip.start_date
+                  ? new Date(activeTrip.start_date).toLocaleDateString(
+                      "en-US",
+                      {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      }
+                    )
+                  : "Date not set"}
+              </p>
+
+              <div className="flex gap-3">
+                <Link
+                  href={`/trips/${activeTrip.id}/new-entry`}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-black px-4 py-3 text-sm font-semibold text-white shadow-md transition-colors hover:bg-gray-800"
+                >
+                  <Plus className="h-5 w-5" />
+                  New Entry
+                </Link>
+                <Link
+                  href={`/trips/${activeTrip.id}`}
+                  className="flex h-12 w-12 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-900 shadow-sm transition-colors hover:bg-gray-50"
+                  aria-label="View Trip Details"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </Link>
+              </div>
+            </div>
+
+            <div className="absolute right-0 top-0 -mr-16 -mt-16 h-48 w-48 rounded-full bg-blue-50 opacity-50 blur-3xl"></div>
+          </div>
+        </section>
+      ) : (
+        <section className="mb-10 rounded-2xl border-2 border-dashed border-gray-200 bg-white p-8 text-center">
+          <p className="mb-4 text-gray-500">No trips yet.</p>
+          <Link
+            href="/trips/new"
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <Plus className="h-4 w-4" /> Create your first trip
+          </Link>
+        </section>
+      )}
+
+      {/* Past Trips */}
+      <section>
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">
+          Your Trips
+        </h2>
+
+        <div className="space-y-3">
+          {pastTrips.length > 0 ? (
+            pastTrips.map((trip) => (
+              <Link
+                key={trip.id}
+                href={`/trips/${trip.id}`}
+                className="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm transition-colors hover:bg-gray-50"
+              >
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                  <Calendar className="h-6 w-6" />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <h4 className="truncate text-base font-semibold text-gray-900">
+                    {trip.title}
+                  </h4>
+                  <p className="truncate text-xs text-gray-500">
+                    {trip.start_date
+                      ? new Date(trip.start_date).toLocaleDateString(
+                          undefined,
+                          {
+                            year: "numeric",
+                            month: "short",
+                          }
+                        )
+                      : "No date"}
+                  </p>
+                </div>
+
+                <ChevronRight className="h-5 w-5 text-gray-300" />
+              </Link>
+            ))
+          ) : (
+            <p className="text-sm text-gray-400">No other trips found.</p>
+          )}
         </div>
-      </main>
-    </div>
+      </section>
+    </main>
   );
 }
