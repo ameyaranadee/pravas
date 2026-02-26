@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
-import { createClient } from "@/lib/supabase/client";
+import { SarvamAIClient } from "sarvamai";
+import { createClient } from "@/lib/supabase/server";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const sarvam = new SarvamAIClient({
+  apiSubscriptionKey: process.env.SARVAM_API_KEY!,
+});
 
 export async function POST(
-  req: Request,
-  { params }: { params: { entryId: string } }
+  _req: Request,
+  { params }: { params: Promise<{ entryId: string }> }
 ) {
-  const supabase = createClient();
-  const { entryId } = params;
+  const { entryId } = await params;
+  const supabase = await createClient();
 
   const { data: entry } = await supabase
     .from("entries")
@@ -26,32 +28,32 @@ export async function POST(
     .eq("id", entryId);
 
   try {
-    const response = await fetch(entry.audio_url);
-    const audioBlob = await response.blob();
+    // Fetch the audio from storage
+    const audioResponse = await fetch(entry.audio_url);
+    const audioBlob = await audioResponse.blob();
     const file = new File([audioBlob], "audio.webm", { type: "audio/webm" });
 
-    const transcription = await openai.audio.transcriptions.create({
-      file: file,
-      model: "whisper-1",
-      language: "mr",
+    // Step 1: Transcribe to Marathi
+    const transcription = await sarvam.speechToText.transcribe({
+      file,
+      model: "saaras:v3",
+      mode: "transcribe",
+      language_code: "mr-IN",
     });
 
-    const marathiText = transcription.text;
+    const marathiText = transcription.transcript;
 
-    // translate to english
-    const translation = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a helpful translator. Translate the following Marathi text to English. Preserve the tone and nuance.",
-        },
-        { role: "user", content: marathiText },
-      ],
+    // Step 2: Translate Marathi → English
+    const translation = await sarvam.text.translate({
+      input: marathiText,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      source_language_code: "mr-IN" as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      target_language_code: "en-IN" as any,
+      model: "sarvam-translate:v1",
     });
 
-    const englishText = translation.choices[0].message.content;
+    const englishText = translation.translated_text;
 
     await supabase
       .from("entries")
@@ -59,13 +61,14 @@ export async function POST(
         transcript_mr: marathiText,
         transcript_en: englishText,
         transcription_status: "done",
-        transcription_provider: "openai",
+        transcription_provider: "sarvam",
       })
       .eq("id", entryId);
 
     return NextResponse.json({ status: "done" });
   } catch (error) {
-    console.error(error);
+    console.error("Transcription error:", error);
+
     await supabase
       .from("entries")
       .update({

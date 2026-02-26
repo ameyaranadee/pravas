@@ -41,7 +41,9 @@ export function RecorderBar({ trips }: { trips: Trip[] }) {
   }, [state]);
 
   const formatTime = (s: number) => {
-    const m = Math.floor(s / 60).toString().padStart(2, "0");
+    const m = Math.floor(s / 60)
+      .toString()
+      .padStart(2, "0");
     const sec = (s % 60).toString().padStart(2, "0");
     return `${m}:${sec}`;
   };
@@ -132,6 +134,10 @@ export function RecorderBar({ trips }: { trips: Trip[] }) {
         .single();
 
       if (entryError) throw entryError;
+
+      fetch(`/api/entries/${entry.id}/transcribe`, { method: "POST" }).catch(
+        (err) => console.error("Transcription trigger failed:", err),
+      );
 
       router.push(`/trips/${tripId}/entries/${entry.id}`);
     } catch (err) {
