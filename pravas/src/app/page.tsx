@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { Plus, ChevronRight, MapPin, Calendar } from "lucide-react";
+import { Plus, ChevronRight, MapPin, Calendar, LogOut } from "lucide-react";
 import { RecorderBar } from "@/components/recorder-bar";
+import { useRouter } from "next/navigation";
 
 type Trip = {
   id: string;
@@ -17,27 +18,37 @@ type Trip = {
 export default function Home() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userInitial, setUserInitial] = useState("");
   const supabase = createClient();
+  const router = useRouter();
 
   useEffect(() => {
-    async function fetchTrips() {
+    async function init() {
       try {
-        const { data, error } = await supabase
-          .from("trips")
-          .select("*")
-          .order("created_at", { ascending: false });
+        const [tripsResult, userResult] = await Promise.all([
+          supabase.from("trips").select("*").order("created_at", { ascending: false }),
+          supabase.auth.getUser(),
+        ]);
 
-        if (error) throw error;
-        setTrips(data || []);
+        if (tripsResult.error) throw tripsResult.error;
+        setTrips(tripsResult.data || []);
+
+        const email = userResult.data.user?.email ?? "";
+        setUserInitial(email.charAt(0).toUpperCase());
       } catch (err) {
-        console.error("Error fetching trips:", err);
+        console.error("Error fetching data:", err);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchTrips();
+    init();
   }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
 
   const activeTrip = trips[0];
   const pastTrips = trips.slice(1);
@@ -56,7 +67,15 @@ export default function Home() {
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">
           Pravas
         </h1>
-        <div className="h-8 w-8 rounded-full bg-gray-200"></div>
+        <button
+          onClick={handleSignOut}
+          className="group flex items-center gap-2 rounded-full border border-gray-200 bg-white pl-1 pr-3 py-1 text-sm text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:text-gray-900"
+        >
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs font-bold text-white">
+            {userInitial}
+          </div>
+          <LogOut className="h-3.5 w-3.5" />
+        </button>
       </header>
 
       {/* Quick Recorder */}

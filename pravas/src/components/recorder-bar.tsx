@@ -102,16 +102,21 @@ export function RecorderBar({ trips }: { trips: Trip[] }) {
     setSaving(true);
 
     try {
-      const fileName = `entries/${Date.now()}.webm`;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const fileName = `${user.id}/${Date.now()}.webm`;
       const { error: uploadError } = await supabase.storage
-        .from("audio")
+        .from("trip-audio")
         .upload(fileName, audioBlob, { contentType: "audio/webm" });
 
       if (uploadError) throw uploadError;
 
       const {
         data: { publicUrl },
-      } = supabase.storage.from("audio").getPublicUrl(fileName);
+      } = supabase.storage.from("trip-audio").getPublicUrl(fileName);
 
       const { error: entryError } = await supabase
         .from("entries")
@@ -121,6 +126,7 @@ export function RecorderBar({ trips }: { trips: Trip[] }) {
           audio_mime: "audio/webm",
           entry_date: new Date().toISOString().split("T")[0],
           transcription_status: "pending",
+          created_by: user.id,
         });
 
       if (entryError) throw entryError;
@@ -137,9 +143,14 @@ export function RecorderBar({ trips }: { trips: Trip[] }) {
     setSaving(true);
 
     try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
       const { data: trip, error: tripError } = await supabase
         .from("trips")
-        .insert({ title: newTripName.trim() })
+        .insert({ title: newTripName.trim(), created_by: user.id })
         .select()
         .single();
 
