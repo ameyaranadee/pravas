@@ -12,8 +12,7 @@ export default function LoginPage() {
 
   const supabase = createClient();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setLoading(true);
     setError("");
 
@@ -67,7 +66,7 @@ export default function LoginPage() {
           </div>
         ) : (
           <form
-            onSubmit={handleSubmit}
+            onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
             className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm"
           >
             <h2 className="mb-6 text-base font-semibold text-gray-900">

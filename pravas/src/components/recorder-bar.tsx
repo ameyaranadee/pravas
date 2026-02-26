@@ -118,7 +118,7 @@ export function RecorderBar({ trips }: { trips: Trip[] }) {
         data: { publicUrl },
       } = supabase.storage.from("trip-audio").getPublicUrl(fileName);
 
-      const { error: entryError } = await supabase
+      const { data: entry, error: entryError } = await supabase
         .from("entries")
         .insert({
           trip_id: tripId,
@@ -127,11 +127,13 @@ export function RecorderBar({ trips }: { trips: Trip[] }) {
           entry_date: new Date().toISOString().split("T")[0],
           transcription_status: "pending",
           created_by: user.id,
-        });
+        })
+        .select("id")
+        .single();
 
       if (entryError) throw entryError;
 
-      router.push(`/trips/${tripId}`);
+      router.push(`/trips/${tripId}/entries/${entry.id}`);
     } catch (err) {
       console.error("Save failed:", err);
       setSaving(false);
