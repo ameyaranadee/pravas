@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Plus, ChevronRight, MapPin, Calendar } from "lucide-react";
+import { RecorderBar } from "@/components/recorder-bar";
 
 type Trip = {
   id: string;
@@ -57,6 +58,11 @@ export default function Home() {
         </h1>
         <div className="h-8 w-8 rounded-full bg-gray-200"></div>
       </header>
+
+      {/* Quick Recorder */}
+      <section className="mb-8">
+        <RecorderBar trips={trips} />
+      </section>
 
       {/* Active Trip */}
       {activeTrip ? (
