@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Loader, CheckCircle, AlertCircle } from "lucide-react";
+import { ArrowLeft, Loader, AlertCircle } from "lucide-react";
+import { TranscriptTabs } from "./transcript-tabs";
 
 export default async function EntryPage({
   params,
@@ -62,11 +63,10 @@ export default async function EntryPage({
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
             Recording
           </h2>
-          <audio
-            controls
-            src={entry.audio_url}
-            className="w-full"
-          />
+          <audio controls className="w-full" preload="metadata">
+            <source src={entry.audio_url} type="audio/webm; codecs=opus" />
+            <source src={entry.audio_url} type="audio/webm" />
+          </audio>
         </section>
 
         {/* Transcription */}
@@ -75,33 +75,11 @@ export default async function EntryPage({
             Transcription
           </h2>
 
-          {status === "done" && (
-            <div className="space-y-5">
-              {entry.transcript_mr && (
-                <div>
-                  <p className="mb-1.5 text-xs font-medium text-gray-400">
-                    Marathi
-                  </p>
-                  <p className="text-base leading-relaxed text-gray-900">
-                    {entry.transcript_mr}
-                  </p>
-                </div>
-              )}
-              {entry.transcript_en && (
-                <div>
-                  <p className="mb-1.5 text-xs font-medium text-gray-400">
-                    English
-                  </p>
-                  <p className="text-base leading-relaxed text-gray-700">
-                    {entry.transcript_en}
-                  </p>
-                </div>
-              )}
-              <div className="flex items-center gap-1.5 text-xs text-green-600">
-                <CheckCircle className="h-3.5 w-3.5" />
-                Transcription complete
-              </div>
-            </div>
+          {status === "done" && entry.transcript_mr && entry.transcript_en && (
+            <TranscriptTabs
+              transcriptMr={entry.transcript_mr}
+              transcriptEn={entry.transcript_en}
+            />
           )}
 
           {(status === "pending" || status === "processing") && (
