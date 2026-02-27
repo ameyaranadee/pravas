@@ -92,7 +92,10 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="relative overflow-hidden rounded-2xl bg-white shadow-lg transition-transform active:scale-[0.98]">
+          <Link
+            href={`/trips/${activeTrip.id}`}
+            className="relative block overflow-hidden rounded-2xl bg-white shadow-lg transition-transform hover:scale-[0.99] active:scale-[0.98]"
+          >
             <div className="p-6">
               <div className="mb-1 flex items-center gap-2 text-blue-600">
                 <MapPin className="h-4 w-4" />
@@ -103,7 +106,7 @@ export default function Home() {
               <h3 className="mb-2 text-2xl font-bold text-gray-900">
                 {activeTrip.title}
               </h3>
-              <p className="mb-6 text-sm text-gray-500">
+              <p className="text-sm text-gray-500">
                 {activeTrip.start_date
                   ? new Date(activeTrip.start_date).toLocaleDateString(
                       "en-US",
@@ -115,27 +118,11 @@ export default function Home() {
                     )
                   : "Date not set"}
               </p>
-
-              <div className="flex gap-3">
-                <Link
-                  href={`/trips/${activeTrip.id}/new-entry`}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-black px-4 py-3 text-sm font-semibold text-white shadow-md transition-colors hover:bg-gray-800"
-                >
-                  <Plus className="h-5 w-5" />
-                  New Entry
-                </Link>
-                <Link
-                  href={`/trips/${activeTrip.id}`}
-                  className="flex h-12 w-12 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-900 shadow-sm transition-colors hover:bg-gray-50"
-                  aria-label="View Trip Details"
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </Link>
-              </div>
+              <ChevronRight className="mt-4 h-5 w-5 text-gray-300" />
             </div>
 
             <div className="absolute right-0 top-0 -mr-16 -mt-16 h-48 w-48 rounded-full bg-blue-50 opacity-50 blur-3xl"></div>
-          </div>
+          </Link>
         </section>
       ) : (
         <section className="mb-10 rounded-2xl border-2 border-dashed border-gray-200 bg-white p-8 text-center">
@@ -151,9 +138,18 @@ export default function Home() {
 
       {/* Past Trips */}
       <section>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">
-          Your Trips
-        </h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500">
+            Your Trips
+          </h2>
+          <Link
+            href="/trips/new"
+            className="flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-gray-800"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            New Trip
+          </Link>
+        </div>
 
         <div className="space-y-3">
           {pastTrips.length > 0 ? (

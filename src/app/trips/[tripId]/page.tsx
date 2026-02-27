@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Mic, FileText, Clock, AlertCircle } from "lucide-react";
+import { RecorderBar } from "@/components/recorder-bar";
 
 type Entry = {
   id: string;
@@ -90,6 +91,11 @@ export default async function TripPage({
           )}
         </div>
       </header>
+
+      {/* Recorder */}
+      <section className="mb-8">
+        <RecorderBar fixedTripId={trip.id} />
+      </section>
 
       {/* Entries */}
       <section>

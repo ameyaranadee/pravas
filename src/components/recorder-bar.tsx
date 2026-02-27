@@ -12,7 +12,13 @@ type Trip = {
 
 type RecorderState = "idle" | "recording" | "paused" | "stopped";
 
-export function RecorderBar({ trips }: { trips: Trip[] }) {
+export function RecorderBar({
+  trips = [],
+  fixedTripId,
+}: {
+  trips?: Trip[];
+  fixedTripId?: string;
+}) {
   const [state, setState] = useState<RecorderState>("idle");
   const [elapsed, setElapsed] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -41,11 +47,59 @@ export function RecorderBar({ trips }: { trips: Trip[] }) {
   }, [state]);
 
   const formatTime = (s: number) => {
-    const m = Math.floor(s / 60)
-      .toString()
-      .padStart(2, "0");
+    const m = Math.floor(s / 60).toString().padStart(2, "0");
     const sec = (s % 60).toString().padStart(2, "0");
     return `${m}:${sec}`;
+  };
+
+  const saveRecording = async (tripId: string, blob: Blob) => {
+    setSaving(true);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const fileName = `${user.id}/${Date.now()}.webm`;
+      const { error: uploadError } = await supabase.storage
+        .from("trip-audio")
+        .upload(fileName, blob, { contentType: "audio/webm" });
+
+      if (uploadError) throw uploadError;
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("trip-audio").getPublicUrl(fileName);
+
+      const { data: entry, error: entryError } = await supabase
+        .from("entries")
+        .insert({
+          trip_id: tripId,
+          audio_url: publicUrl,
+          audio_mime: "audio/webm",
+          entry_date: new Date().toISOString().split("T")[0],
+          transcription_status: "pending",
+          created_by: user.id,
+        })
+        .select("id")
+        .single();
+
+      if (entryError) throw entryError;
+
+      fetch(`/api/entries/${entry.id}/transcribe`, { method: "POST" }).catch(
+        (err) => console.error("Transcription trigger failed:", err),
+      );
+
+      router.push(`/trips/${tripId}/entries/${entry.id}`);
+    } catch (err) {
+      console.error("Save failed:", err);
+      setSaving(false);
+    }
+  };
+
+  const handleSaveToTrip = async (tripId: string) => {
+    if (!audioBlob) return;
+    await saveRecording(tripId, audioBlob);
   };
 
   const startRecording = async () => {
@@ -62,9 +116,13 @@ export function RecorderBar({ trips }: { trips: Trip[] }) {
 
       mr.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        setAudioBlob(blob);
         stream.getTracks().forEach((t) => t.stop());
-        setShowModal(true);
+        if (fixedTripId) {
+          saveRecording(fixedTripId, blob);
+        } else {
+          setAudioBlob(blob);
+          setShowModal(true);
+        }
       };
 
       mr.start();
@@ -96,53 +154,6 @@ export function RecorderBar({ trips }: { trips: Trip[] }) {
     ) {
       mediaRecorderRef.current.stop();
       setState("stopped");
-    }
-  };
-
-  const handleSaveToTrip = async (tripId: string) => {
-    if (!audioBlob) return;
-    setSaving(true);
-
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const fileName = `${user.id}/${Date.now()}.webm`;
-      const { error: uploadError } = await supabase.storage
-        .from("trip-audio")
-        .upload(fileName, audioBlob, { contentType: "audio/webm" });
-
-      if (uploadError) throw uploadError;
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("trip-audio").getPublicUrl(fileName);
-
-      const { data: entry, error: entryError } = await supabase
-        .from("entries")
-        .insert({
-          trip_id: tripId,
-          audio_url: publicUrl,
-          audio_mime: "audio/webm",
-          entry_date: new Date().toISOString().split("T")[0],
-          transcription_status: "pending",
-          created_by: user.id,
-        })
-        .select("id")
-        .single();
-
-      if (entryError) throw entryError;
-
-      fetch(`/api/entries/${entry.id}/transcribe`, { method: "POST" }).catch(
-        (err) => console.error("Transcription trigger failed:", err),
-      );
-
-      router.push(`/trips/${tripId}/entries/${entry.id}`);
-    } catch (err) {
-      console.error("Save failed:", err);
-      setSaving(false);
     }
   };
 
@@ -256,9 +267,18 @@ export function RecorderBar({ trips }: { trips: Trip[] }) {
             </div>
           </>
         )}
+
+        {state === "stopped" && saving && (
+          <div className="flex flex-1 items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+              <div className="h-3 w-3 animate-pulse rounded-full bg-blue-500" />
+            </div>
+            <span className="text-sm text-gray-400">Saving recording...</span>
+          </div>
+        )}
       </div>
 
-      {/* Save to Trip Modal */}
+      {/* Save to Trip Modal (only used when fixedTripId is not set) */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center">
           <div className="w-full max-w-md rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-2xl">
