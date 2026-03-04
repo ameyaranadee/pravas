@@ -32,7 +32,7 @@ export default async function EntryPage({
   const status = entry.transcription_status as string;
 
   return (
-    <main className="min-h-screen bg-gray-50 px-36 py-8 font-sans text-gray-900">
+    <main className="min-h-screen bg-gray-50 px-4 py-8 font-sans text-gray-900 sm:px-8 lg:px-36">
       {/* Header */}
       <header className="mb-8 flex items-center gap-4">
         <Link

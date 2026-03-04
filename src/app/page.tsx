@@ -62,7 +62,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-36 py-8 font-sans text-gray-900">
+    <main className="min-h-screen bg-gray-50 px-4 py-8 font-sans text-gray-900 sm:px-8 lg:px-36">
       <header className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">
           Pravas

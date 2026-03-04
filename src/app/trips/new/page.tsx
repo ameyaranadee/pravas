@@ -90,7 +90,7 @@ export default function NewTripPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 px-36 py-8 font-sans text-gray-900">
+    <main className="min-h-screen bg-gray-50 px-4 py-8 font-sans text-gray-900 sm:px-8 lg:px-36">
       <header className="mb-8 flex items-center gap-4">
         <Link
           href="/"
@@ -105,7 +105,7 @@ export default function NewTripPage() {
 
       <form
         onSubmit={handleCreate}
-        className="max-w-md space-y-5 rounded-2xl border border-gray-100 bg-white p-8 shadow-sm"
+        className="max-w-md space-y-5 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-8"
       >
         {/* Title */}
         <div>
