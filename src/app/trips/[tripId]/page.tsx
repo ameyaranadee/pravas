@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Mic, FileText, Clock, AlertCircle } from "lucide-react";
 import { RecorderBar } from "@/components/recorder-bar";
+import Image from "next/image";
 
 type Entry = {
   id: string;
@@ -11,6 +12,42 @@ type Entry = {
   transcription_status: string;
   transcript_en: string | null;
 };
+
+type EntryPhoto = {
+  entry_id: string;
+  url: string;
+};
+
+function PhotoStack({ photos }: { photos: EntryPhoto[] }) {
+  if (!photos.length) return null;
+  const visible = photos.slice(0, 3);
+  const extra = photos.length - visible.length;
+  const rotations = ["-rotate-3", "rotate-0", "rotate-3"];
+
+  return (
+    <div className="flex items-center -space-x-2">
+      {visible.map((photo, i) => (
+        <div
+          key={i}
+          className={`relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-lg ring-2 ring-white ${rotations[i] ?? ""}`}
+        >
+          <Image
+            src={photo.url}
+            alt="Entry photo"
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        </div>
+      ))}
+      {extra > 0 && (
+        <span className="ml-3 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+          +{extra}
+        </span>
+      )}
+    </div>
+  );
+}
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; className: string }> = {
@@ -66,6 +103,22 @@ export default async function TripPage({
   ]);
 
   if (!trip) notFound();
+
+  const entryIds = (entries ?? []).map((e) => e.id);
+  let photosByEntryId: Record<string, EntryPhoto[]> = {};
+
+  if (entryIds.length > 0) {
+    const { data: allPhotos } = await supabase
+      .from("entry_photos")
+      .select("entry_id, url")
+      .in("entry_id", entryIds)
+      .order("created_at");
+
+    for (const photo of allPhotos ?? []) {
+      if (!photosByEntryId[photo.entry_id]) photosByEntryId[photo.entry_id] = [];
+      photosByEntryId[photo.entry_id].push(photo);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8 font-sans text-gray-900 sm:px-8 lg:px-36">
@@ -140,6 +193,11 @@ export default async function TripPage({
                         })}
                       </p>
                     ) : null}
+                    {(photosByEntryId[entry.id]?.length ?? 0) > 0 && (
+                      <div className="mt-2">
+                        <PhotoStack photos={photosByEntryId[entry.id] ?? []} />
+                      </div>
+                    )}
                   </div>
 
                   <StatusBadge status={entry.transcription_status} />

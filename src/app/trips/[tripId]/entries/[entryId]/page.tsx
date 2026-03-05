@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Loader, AlertCircle } from "lucide-react";
 import { TranscriptTabs } from "./transcript-tabs";
+import { EntryPhotos } from "@/components/entry-photos";
 
 export default async function EntryPage({
   params,
@@ -12,13 +13,24 @@ export default async function EntryPage({
   const { tripId, entryId } = await params;
   const supabase = await createClient();
 
-  const { data: entry } = await supabase
-    .from("entries")
-    .select(
-      "id, entry_date, created_at, audio_url, transcription_status, transcript_mr, transcript_en, transcription_error"
-    )
-    .eq("id", entryId)
-    .single();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const [{ data: entry }, { data: photos }] = await Promise.all([
+    supabase
+      .from("entries")
+      .select(
+        "id, entry_date, created_at, audio_url, transcription_status, transcript_mr, transcript_en, transcription_error"
+      )
+      .eq("id", entryId)
+      .single(),
+    supabase
+      .from("entry_photos")
+      .select("id, url, storage_path")
+      .eq("entry_id", entryId)
+      .order("created_at"),
+  ]);
 
   if (!entry) notFound();
 
@@ -106,6 +118,18 @@ export default async function EntryPage({
               </div>
             </div>
           )}
+        </section>
+
+        {/* Photos */}
+        <section className="rounded-2xl bg-white p-5 shadow-sm">
+          <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
+            Photos
+          </h2>
+          <EntryPhotos
+            entryId={entry.id}
+            userId={user?.id ?? ""}
+            initialPhotos={photos ?? []}
+          />
         </section>
       </div>
     </main>
