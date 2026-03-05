@@ -22,7 +22,7 @@ export function TranscriptTabs({
           onClick={() => setActive("mr")}
           className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
             active === "mr"
-              ? "bg-white text-gray-900 shadow-sm"
+              ? "bg-white text-[#2D323B] shadow-sm"
               : "text-gray-400 hover:text-gray-600"
           }`}
         >
@@ -32,7 +32,7 @@ export function TranscriptTabs({
           onClick={() => setActive("en")}
           className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
             active === "en"
-              ? "bg-white text-gray-900 shadow-sm"
+              ? "bg-white text-[#2D323B] shadow-sm"
               : "text-gray-400 hover:text-gray-600"
           }`}
         >
@@ -41,7 +41,7 @@ export function TranscriptTabs({
       </div>
 
       {/* Tab content */}
-      <p className="leading-relaxed text-gray-900">
+      <p className="leading-relaxed text-[#2D323B]">
         {active === "mr" ? transcriptMr : transcriptEn}
       </p>
 

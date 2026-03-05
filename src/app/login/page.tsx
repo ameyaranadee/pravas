@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Plane } from "lucide-react";
+import Image from "next/image";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -28,22 +28,15 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+    <main className="flex min-h-screen items-center justify-center bg-transparent px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-black">
-            <Plane className="h-7 w-7 text-white" />
-          </div>
-          <div className="text-center">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-              Pravas
-            </h1>
-            <p className="mt-1 text-sm text-gray-500">Your travel diary</p>
-          </div>
+          <Image src="/pravas_logo.png" alt="Pravas" height={72} width={220} className="object-contain" />
+          <p className="text-sm text-gray-500">Your travel diary</p>
         </div>
 
         <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
-          <h2 className="mb-6 text-base font-semibold text-gray-900">
+          <h2 className="mb-6 text-base font-semibold text-[#2D323B]">
             Sign in to continue
           </h2>
 

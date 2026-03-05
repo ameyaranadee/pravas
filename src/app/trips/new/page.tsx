@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 
 // Common timezones for the picker
@@ -90,17 +91,18 @@ export default function NewTripPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-8 font-sans text-gray-900 sm:px-8 lg:px-36">
+    <main className="min-h-screen bg-transparent px-4 py-8 font-sans text-[#2D323B] sm:px-8 lg:px-36">
       <header className="mb-8 flex items-center gap-4">
         <Link
           href="/"
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 shadow-sm transition-colors hover:text-gray-900"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 shadow-sm transition-colors hover:text-[#2D323B]"
         >
           <ArrowLeft className="h-4 w-4" />
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+        <h1 className="text-2xl font-bold tracking-tight text-[#2D323B]">
           New Trip
         </h1>
+        <Image src="/pravas_logo.png" alt="Pravas" height={24} width={80} className="ml-auto object-contain opacity-60" />
       </header>
 
       <form

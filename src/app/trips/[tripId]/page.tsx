@@ -121,17 +121,17 @@ export default async function TripPage({
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-8 font-sans text-gray-900 sm:px-8 lg:px-36">
+    <main className="min-h-screen bg-transparent px-4 py-8 font-sans text-[#2D323B] sm:px-8 lg:px-36">
       {/* Header */}
       <header className="mb-8 flex items-center gap-4">
         <Link
           href="/"
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 shadow-sm transition-colors hover:text-gray-900"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 shadow-sm transition-colors hover:text-[#2D323B]"
         >
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-[#2D323B]">
             {trip.title}
           </h1>
           {trip.start_date && (
@@ -143,6 +143,7 @@ export default async function TripPage({
             </p>
           )}
         </div>
+        <Image src="/pravas_logo.png" alt="Pravas" height={24} width={80} className="ml-auto object-contain opacity-60" />
       </header>
 
       {/* Recorder */}
@@ -173,7 +174,7 @@ export default async function TripPage({
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-base font-semibold text-gray-900">
+                    <p className="text-base font-semibold text-[#2D323B]">
                       {entryDate.toLocaleDateString("en-US", {
                         month: "long",
                         day: "numeric",

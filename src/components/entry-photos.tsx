@@ -162,38 +162,79 @@ export function EntryPhotos({
         </div>
       )}
 
-      {/* Photo grid */}
+      {/* Polaroid photos on a string */}
       {allPhotos.length > 0 ? (
-        <div className="grid grid-cols-3 gap-2">
-          {allPhotos.map((photo) => (
-            <div
-              key={photo.id}
-              className="group relative aspect-square overflow-hidden rounded-xl bg-gray-100"
-            >
-              <Image
-                src={photo.url}
-                alt="Entry photo"
-                fill
-                className={`object-cover transition-opacity ${
-                  isOptimistic(photo) ? "opacity-50" : "opacity-100"
-                }`}
-                unoptimized
-              />
-              {isOptimistic(photo) && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                </div>
-              )}
-              {!isOptimistic(photo) && (
-                <button
-                  onClick={() => handleDelete(photo as Photo)}
-                  className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
+        <div className="relative px-1">
+          {/* The string — loose catenary curve */}
+          <svg
+            viewBox="0 0 1000 36"
+            preserveAspectRatio="none"
+            className="pointer-events-none absolute inset-x-0 z-20"
+            style={{ top: 0, height: "36px", width: "100%" }}
+          >
+            {/* shadow */}
+            <path
+              d="M0,5 Q500,32 1000,5"
+              stroke="rgba(0,0,0,0.15)"
+              strokeWidth="2"
+              fill="none"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+              transform="translate(0,2)"
+            />
+            {/* main rope */}
+            <path
+              d="M0,5 Q500,32 1000,5"
+              stroke="#92400e"
+              strokeWidth="1.5"
+              fill="none"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+
+          {/* Scrollable photo row */}
+          <div className="flex gap-2 overflow-x-auto pb-3 [scrollbar-width:none]">
+            {allPhotos.map((photo, index) => {
+              const rotations = ["-rotate-2", "rotate-3", "-rotate-1", "rotate-2", "-rotate-3"];
+              const rotation = rotations[index % rotations.length];
+              return (
+                <div
+                  key={photo.id}
+                  className={`group relative z-10 flex-shrink-0 bg-white px-2 pb-5 pt-10 shadow-md transition-all duration-200 hover:scale-105 hover:rotate-0 hover:z-30 hover:shadow-xl ${rotation}`}
                 >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-          ))}
+                  {/* Hole where string passes through */}
+                  <div className="absolute left-1/2 z-30 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-inner ring-1 ring-gray-300" style={{ top: "5px" }} />
+
+                  <div className="relative h-28 w-20 overflow-hidden bg-gray-100">
+                    <Image
+                      src={photo.url}
+                      alt="Entry photo"
+                      fill
+                      className={`object-cover transition-opacity ${
+                        isOptimistic(photo) ? "opacity-50" : "opacity-100"
+                      }`}
+                      unoptimized
+                    />
+                    {isOptimistic(photo) && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      </div>
+                    )}
+                  </div>
+
+                  {!isOptimistic(photo) && (
+                    <button
+                      onClick={() => handleDelete(photo as Photo)}
+                      className="absolute right-1 top-8 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       ) : (
         <div

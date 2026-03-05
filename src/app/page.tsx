@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { Plus, ChevronRight, MapPin, Calendar, LogOut } from "lucide-react";
+import NextImage from "next/image";
+import { Plus, ChevronRight, MapPin, LogOut } from "lucide-react";
 import { RecorderBar } from "@/components/recorder-bar";
 import { useRouter } from "next/navigation";
 
@@ -51,27 +52,25 @@ export default function Home() {
   };
 
   const activeTrip = trips[0];
-  const pastTrips = trips.slice(1);
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-7 w-7 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-8 font-sans text-gray-900 sm:px-8 lg:px-36">
-      <header className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-          Pravas
-        </h1>
+    <main className="min-h-screen px-4 py-8 font-sans text-[#2D323B] sm:px-8 lg:px-36">
+      {/* Header */}
+      <header className="mb-10 flex items-center justify-between">
+        <NextImage src="/pravas_logo.png" alt="Pravas" height={36} width={120} className="object-contain" />
         <button
           onClick={handleSignOut}
-          className="group flex items-center gap-2 rounded-full border border-gray-200 bg-white pl-1 pr-3 py-1 text-sm text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:text-gray-900"
+          className="flex items-center gap-2 rounded-full border border-stone-300 bg-white/60 pl-1 pr-3 py-1 text-sm text-gray-600 backdrop-blur-sm transition-colors hover:bg-white"
         >
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs font-bold text-white">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-stone-800 text-xs font-bold text-white">
             {userInitial}
           </div>
           <LogOut className="h-3.5 w-3.5" />
@@ -79,112 +78,96 @@ export default function Home() {
       </header>
 
       {/* Quick Recorder */}
-      <section className="mb-8">
+      <section className="mb-10">
         <RecorderBar trips={trips} />
       </section>
 
       {/* Active Trip */}
       {activeTrip ? (
         <section className="mb-10">
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500">
-              Continue
-            </h2>
-          </div>
-
+          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-stone-400">
+            Current Trip
+          </p>
           <Link
             href={`/trips/${activeTrip.id}`}
-            className="relative block overflow-hidden rounded-2xl bg-white shadow-lg transition-transform hover:scale-[0.99] active:scale-[0.98]"
+            className="group flex items-start justify-between rounded-2xl border border-stone-200 bg-white/70 p-6 shadow-sm backdrop-blur-sm transition-all hover:shadow-md hover:bg-white"
           >
-            <div className="p-6">
-              <div className="mb-1 flex items-center gap-2 text-blue-600">
-                <MapPin className="h-4 w-4" />
-                <span className="text-xs font-bold uppercase tracking-wide">
-                  Current Trip
-                </span>
-              </div>
-              <h3 className="mb-2 text-2xl font-bold text-gray-900">
-                {activeTrip.title}
-              </h3>
-              <p className="text-sm text-gray-500">
-                {activeTrip.start_date
-                  ? new Date(activeTrip.start_date).toLocaleDateString(
-                      "en-US",
-                      {
+            <div>
+              <div className="mb-1.5 flex items-center gap-1.5 text-stone-400">
+                <MapPin className="h-3.5 w-3.5" />
+                <span className="text-xs">
+                  {activeTrip.start_date
+                    ? new Date(activeTrip.start_date).toLocaleDateString("en-US", {
                         month: "long",
                         day: "numeric",
                         year: "numeric",
-                      }
-                    )
-                  : "Date not set"}
-              </p>
-              <ChevronRight className="mt-4 h-5 w-5 text-gray-300" />
+                      })
+                    : "Date not set"}
+                </span>
+              </div>
+              <h3 className="text-2xl font-bold tracking-tight text-[#2D323B]">
+                {activeTrip.title}
+              </h3>
             </div>
-
-            <div className="absolute right-0 top-0 -mr-16 -mt-16 h-48 w-48 rounded-full bg-blue-50 opacity-50 blur-3xl"></div>
+            <ChevronRight className="mt-1 h-5 w-5 flex-shrink-0 text-stone-300 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </section>
       ) : (
-        <section className="mb-10 rounded-2xl border-2 border-dashed border-gray-200 bg-white p-8 text-center">
-          <p className="mb-4 text-gray-500">No trips yet.</p>
+        <section className="mb-10 rounded-2xl border border-dashed border-stone-300 p-10 text-center">
+          <p className="mb-4 text-sm text-stone-500">No trips yet. Start your first journey.</p>
           <Link
             href="/trips/new"
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            className="inline-flex items-center gap-2 rounded-lg bg-stone-800 px-4 py-2 text-sm font-medium text-white hover:bg-stone-900"
           >
-            <Plus className="h-4 w-4" /> Create your first trip
+            <Plus className="h-4 w-4" /> Create a trip
           </Link>
         </section>
       )}
 
-      {/* Past Trips */}
+      {/* All Trips */}
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500">
-            Your Trips
-          </h2>
+          <p className="text-xs font-semibold uppercase tracking-widest text-stone-400">
+            All Trips
+          </p>
           <Link
             href="/trips/new"
-            className="flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-gray-800"
+            className="flex items-center gap-1.5 rounded-lg border border-stone-300 bg-white/60 px-3 py-1.5 text-xs font-medium text-stone-700 transition-colors hover:bg-white"
           >
             <Plus className="h-3.5 w-3.5" />
             New Trip
           </Link>
         </div>
 
-        <div className="space-y-3">
-          {pastTrips.length > 0 ? (
-            pastTrips.map((trip) => (
+        <div className="space-y-2">
+          {trips.length > 0 ? (
+            trips.map((trip, i) => (
               <Link
                 key={trip.id}
                 href={`/trips/${trip.id}`}
-                className="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm transition-colors hover:bg-gray-50"
+                className="group flex items-center gap-4 rounded-xl border border-stone-200 bg-white/60 px-4 py-3.5 transition-all hover:bg-white hover:shadow-sm"
               >
-                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-                  <Calendar className="h-6 w-6" />
-                </div>
-
+                <span className="w-5 flex-shrink-0 text-right text-xs font-medium text-stone-300">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
                 <div className="flex-1 min-w-0">
-                  <h4 className="truncate text-base font-semibold text-gray-900">
+                  <p className="truncate text-sm font-semibold text-[#2D323B]">
                     {trip.title}
-                  </h4>
-                  <p className="truncate text-xs text-gray-500">
+                  </p>
+                  <p className="truncate text-xs text-stone-400">
                     {trip.start_date
-                      ? new Date(trip.start_date).toLocaleDateString(
-                          undefined,
-                          {
-                            year: "numeric",
-                            month: "short",
-                          }
-                        )
+                      ? new Date(trip.start_date).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                        })
                       : "No date"}
                   </p>
                 </div>
-
-                <ChevronRight className="h-5 w-5 text-gray-300" />
+                <ChevronRight className="h-4 w-4 flex-shrink-0 text-stone-300 transition-transform group-hover:translate-x-0.5" />
               </Link>
             ))
           ) : (
-            <p className="text-sm text-gray-400">No other trips found.</p>
+            <p className="text-sm text-stone-400">No trips yet.</p>
           )}
         </div>
       </section>

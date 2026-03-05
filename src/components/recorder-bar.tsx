@@ -230,7 +230,7 @@ export function RecorderBar({
                 </div>
               )}
               <div>
-                <p className="tabular-nums text-sm font-semibold text-gray-900">
+                <p className="tabular-nums text-sm font-semibold text-[#2D323B]">
                   {formatTime(elapsed)}
                 </p>
                 <p className="text-xs text-gray-400">
@@ -283,7 +283,7 @@ export function RecorderBar({
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center">
           <div className="w-full max-w-md rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-2xl">
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900">
+              <h2 className="text-lg font-bold text-[#2D323B]">
                 Save Recording
               </h2>
               <button
@@ -309,7 +309,7 @@ export function RecorderBar({
                   <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100 text-sm font-bold text-blue-600">
                     {trip.title.charAt(0).toUpperCase()}
                   </div>
-                  <span className="flex-1 text-sm font-medium text-gray-900">
+                  <span className="flex-1 text-sm font-medium text-[#2D323B]">
                     {trip.title}
                   </span>
                   <ChevronRight className="h-4 w-4 text-gray-300" />
