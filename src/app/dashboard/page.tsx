@@ -18,7 +18,7 @@ type Trip = {
 export default function Dashboard() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userInitial, setUserInitial] = useState("");
+  const [userInitials, setUserInitials] = useState("");
   const supabase = createClient();
   const router = useRouter();
 
@@ -36,8 +36,13 @@ export default function Dashboard() {
         if (tripsResult.error) throw tripsResult.error;
         setTrips(tripsResult.data || []);
 
-        const email = userResult.data.user?.email ?? "";
-        setUserInitial(email.charAt(0).toUpperCase());
+        const meta = userResult.data.user?.user_metadata ?? {};
+        const fullName: string = meta.full_name ?? meta.name ?? userResult.data.user?.email ?? "";
+        const parts = fullName.trim().split(/\s+/);
+        const initials = parts.length >= 2
+          ? parts[0][0].toUpperCase() + parts[parts.length - 1][0].toUpperCase()
+          : fullName.charAt(0).toUpperCase();
+        setUserInitials(initials);
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
@@ -73,7 +78,7 @@ export default function Dashboard() {
           className="flex items-center gap-2 rounded-full border border-stone-200 px-3 py-1.5 text-sm text-stone-500 transition-colors hover:border-stone-300 hover:text-[#2D323B]"
         >
           <div className="flex h-5 w-5 items-center justify-center rounded-full bg-stone-800 text-[10px] font-bold text-white">
-            {userInitial}
+            {userInitials}
           </div>
           <LogOut className="h-3.5 w-3.5" />
         </button>
