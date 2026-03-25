@@ -29,7 +29,7 @@ function PhotoStack({ photos }: { photos: EntryPhoto[] }) {
       {visible.map((photo, i) => (
         <div
           key={i}
-          className={`relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-lg ring-2 ring-white ${rotations[i] ?? ""}`}
+          className={`relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg ring-2 ring-white ${rotations[i] ?? ""}`}
         >
           <Image
             src={photo.url}
@@ -41,9 +41,7 @@ function PhotoStack({ photos }: { photos: EntryPhoto[] }) {
         </div>
       ))}
       {extra > 0 && (
-        <span className="ml-3 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-          +{extra}
-        </span>
+        <span className="ml-3 text-xs text-stone-400">+{extra}</span>
       )}
     </div>
   );
@@ -51,38 +49,26 @@ function PhotoStack({ photos }: { photos: EntryPhoto[] }) {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; className: string }> = {
-    pending: {
-      label: "Pending",
-      className: "bg-gray-100 text-gray-500",
-    },
-    processing: {
-      label: "Processing",
-      className: "bg-blue-50 text-blue-600",
-    },
-    done: {
-      label: "Transcribed",
-      className: "bg-green-50 text-green-600",
-    },
-    failed: {
-      label: "Failed",
-      className: "bg-red-50 text-red-500",
-    },
+    pending: { label: "Pending", className: "text-stone-400" },
+    processing: { label: "Processing", className: "text-blue-500" },
+    done: { label: "Transcribed", className: "text-green-600" },
+    failed: { label: "Failed", className: "text-red-500" },
   };
 
-  const config = map[status] ?? { label: status, className: "bg-gray-100 text-gray-500" };
+  const config = map[status] ?? { label: status, className: "text-stone-400" };
 
   return (
-    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${config.className}`}>
+    <span className={`text-xs font-medium ${config.className}`}>
       {config.label}
     </span>
   );
 }
 
 function EntryIcon({ status }: { status: string }) {
-  if (status === "done") return <FileText className="h-5 w-5 text-green-600" />;
-  if (status === "failed") return <AlertCircle className="h-5 w-5 text-red-400" />;
-  if (status === "processing") return <Clock className="h-5 w-5 text-blue-500" />;
-  return <Mic className="h-5 w-5 text-gray-400" />;
+  if (status === "done") return <FileText className="h-4 w-4 text-green-600" />;
+  if (status === "failed") return <AlertCircle className="h-4 w-4 text-red-400" />;
+  if (status === "processing") return <Clock className="h-4 w-4 text-blue-500" />;
+  return <Mic className="h-4 w-4 text-stone-400" />;
 }
 
 export default async function TripPage({
@@ -94,7 +80,11 @@ export default async function TripPage({
   const supabase = await createClient();
 
   const [{ data: trip }, { data: entries }] = await Promise.all([
-    supabase.from("trips").select("id, title, start_date").eq("id", tripId).single(),
+    supabase
+      .from("trips")
+      .select("id, title, start_date")
+      .eq("id", tripId)
+      .single(),
     supabase
       .from("entries")
       .select("id, entry_date, created_at, transcription_status, transcript_en")
@@ -121,21 +111,25 @@ export default async function TripPage({
   }
 
   return (
-    <main className="min-h-screen bg-transparent px-4 py-8 font-sans text-[#2D323B] sm:px-8 lg:px-36">
-      {/* Header */}
-      <header className="mb-8 flex items-center gap-4">
+    <div className="min-h-screen bg-white font-sans text-[#2D323B]">
+      {/* Navbar */}
+      <header className="mx-auto flex h-14 max-w-3xl items-center justify-between px-6">
         <Link
-          href="/"
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 shadow-sm transition-colors hover:text-[#2D323B]"
+          href="/dashboard"
+          className="flex items-center gap-1.5 text-sm text-stone-500 transition-colors hover:text-[#2D323B]"
         >
           <ArrowLeft className="h-4 w-4" />
+          Back
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#2D323B]">
-            {trip.title}
-          </h1>
+        <span className="text-sm font-medium tracking-tight">pravas</span>
+      </header>
+
+      <div className="mx-auto max-w-3xl px-6 pb-20">
+        {/* Trip title */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold tracking-tight">{trip.title}</h1>
           {trip.start_date && (
-            <p className="text-sm text-gray-400">
+            <p className="mt-1 text-sm text-stone-400">
               {new Date(trip.start_date).toLocaleDateString("en-US", {
                 month: "long",
                 year: "numeric",
@@ -143,79 +137,79 @@ export default async function TripPage({
             </p>
           )}
         </div>
-        <Image src="/pravas_logo.png" alt="Pravas" height={24} width={80} className="ml-auto object-contain opacity-60" />
-      </header>
 
-      {/* Recorder */}
-      <section className="mb-8">
-        <RecorderBar fixedTripId={trip.id} />
-      </section>
+        {/* Recorder */}
+        <section className="mb-10">
+          <RecorderBar fixedTripId={trip.id} />
+        </section>
 
-      {/* Entries */}
-      <section>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">
-          Entries · {entries?.length ?? 0}
-        </h2>
+        {/* Divider */}
+        <hr className="mb-8 border-stone-100" />
 
-        {entries && entries.length > 0 ? (
-          <div className="space-y-3">
-            {entries.map((entry: Entry) => {
-              const entryDate = new Date(entry.entry_date);
-              const createdAt = entry.created_at ? new Date(entry.created_at) : null;
+        {/* Entries */}
+        <section>
+          <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-stone-400">
+            Entries · {entries?.length ?? 0}
+          </p>
 
-              return (
-                <Link
-                  key={entry.id}
-                  href={`/trips/${tripId}/entries/${entry.id}`}
-                  className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm transition-colors hover:bg-gray-50"
-                >
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gray-50">
-                    <EntryIcon status={entry.transcription_status} />
-                  </div>
+          {entries && entries.length > 0 ? (
+            <div className="divide-y divide-stone-100">
+              {entries.map((entry: Entry) => {
+                const entryDate = new Date(entry.entry_date);
+                const createdAt = entry.created_at ? new Date(entry.created_at) : null;
 
-                  <div className="flex-1 min-w-0">
-                    <p className="text-base font-semibold text-[#2D323B]">
-                      {entryDate.toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </p>
-                    {entry.transcript_en ? (
-                      <p className="mt-0.5 truncate text-sm text-gray-400">
-                        {entry.transcript_en}
-                      </p>
-                    ) : createdAt ? (
-                      <p className="mt-0.5 text-xs text-gray-400">
-                        Recorded at{" "}
-                        {createdAt.toLocaleTimeString("en-US", {
-                          hour: "numeric",
-                          minute: "2-digit",
+                return (
+                  <Link
+                    key={entry.id}
+                    href={`/trips/${tripId}/entries/${entry.id}`}
+                    className="group flex items-center gap-4 py-4 transition-colors hover:text-stone-600"
+                  >
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-stone-50">
+                      <EntryIcon status={entry.transcription_status} />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">
+                        {entryDate.toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
                         })}
                       </p>
-                    ) : null}
-                    {(photosByEntryId[entry.id]?.length ?? 0) > 0 && (
-                      <div className="mt-2">
-                        <PhotoStack photos={photosByEntryId[entry.id] ?? []} />
-                      </div>
-                    )}
-                  </div>
+                      {entry.transcript_en ? (
+                        <p className="mt-0.5 truncate text-xs text-stone-400">
+                          {entry.transcript_en}
+                        </p>
+                      ) : createdAt ? (
+                        <p className="mt-0.5 text-xs text-stone-400">
+                          Recorded at{" "}
+                          {createdAt.toLocaleTimeString("en-US", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      ) : null}
+                      {(photosByEntryId[entry.id]?.length ?? 0) > 0 && (
+                        <div className="mt-2">
+                          <PhotoStack photos={photosByEntryId[entry.id] ?? []} />
+                        </div>
+                      )}
+                    </div>
 
-                  <StatusBadge status={entry.transcription_status} />
-                </Link>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-white p-10 text-center">
-            <Mic className="mx-auto mb-3 h-8 w-8 text-gray-300" />
-            <p className="text-sm text-gray-400">No entries yet.</p>
-            <p className="mt-1 text-xs text-gray-300">
-              Record a memory from the home screen.
-            </p>
-          </div>
-        )}
-      </section>
-    </main>
+                    <StatusBadge status={entry.transcription_status} />
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-stone-200 p-10 text-center">
+              <Mic className="mx-auto mb-3 h-6 w-6 text-stone-300" />
+              <p className="text-sm text-stone-400">No entries yet.</p>
+              <p className="mt-1 text-xs text-stone-300">Record a memory above.</p>
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
   );
 }

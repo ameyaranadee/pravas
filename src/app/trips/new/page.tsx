@@ -4,10 +4,8 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 
-// Common timezones for the picker
 const TIMEZONES = [
   "Africa/Cairo",
   "Africa/Johannesburg",
@@ -45,7 +43,7 @@ export default function NewTripPage() {
   const [endDate, setEndDate] = useState("");
   const [ongoing, setOngoing] = useState(false);
   const [timezone, setTimezone] = useState(
-    () => Intl.DateTimeFormat().resolvedOptions().timeZone
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
   );
   const [coverPhotoUrl, setCoverPhotoUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -65,7 +63,7 @@ export default function NewTripPage() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      router.push("/login");
+      router.push("/");
       return;
     }
 
@@ -90,152 +88,138 @@ export default function NewTripPage() {
     }
   };
 
+  const inputClass =
+    "w-full rounded-xl border border-stone-200 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-stone-400";
+  const labelClass = "mb-1.5 block text-xs font-medium text-stone-500";
+
   return (
-    <main className="min-h-screen bg-transparent px-4 py-8 font-sans text-[#2D323B] sm:px-8 lg:px-36">
-      <header className="mb-8 flex items-center gap-4">
+    <div className="min-h-screen bg-white font-sans text-[#2D323B]">
+      {/* Navbar */}
+      <header className="mx-auto flex h-14 max-w-3xl items-center justify-between px-6">
         <Link
-          href="/"
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 shadow-sm transition-colors hover:text-[#2D323B]"
+          href="/dashboard"
+          className="flex items-center gap-1.5 text-sm text-stone-500 transition-colors hover:text-[#2D323B]"
         >
           <ArrowLeft className="h-4 w-4" />
+          Back
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight text-[#2D323B]">
-          New Trip
-        </h1>
-        <Image src="/pravas_logo.png" alt="Pravas" height={24} width={80} className="ml-auto object-contain opacity-60" />
+        <span className="text-sm font-medium tracking-tight">pravas</span>
       </header>
 
-      <form
-        onSubmit={handleCreate}
-        className="max-w-md space-y-5 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-8"
-      >
-        {/* Title */}
-        <div>
-          <label
-            htmlFor="title"
-            className="mb-1.5 block text-xs font-medium text-gray-600"
-          >
-            Trip name <span className="text-red-400">*</span>
-          </label>
-          <input
-            id="title"
-            type="text"
-            autoFocus
-            required
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Tokyo Winter 2025"
-            className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-gray-400"
-          />
+      <div className="mx-auto max-w-3xl px-6 pb-20">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold tracking-tight">New Trip</h1>
+          <p className="mt-1 text-sm text-stone-400">Where are you headed?</p>
         </div>
 
-        {/* Start date */}
-        <div>
-          <label
-            htmlFor="start_date"
-            className="mb-1.5 block text-xs font-medium text-gray-600"
-          >
-            Start date
-          </label>
-          <input
-            id="start_date"
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-gray-400"
-          />
-        </div>
-
-        {/* Ongoing toggle */}
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            role="switch"
-            aria-checked={ongoing}
-            onClick={() => setOngoing((v) => !v)}
-            className={`relative h-5 w-9 flex-shrink-0 rounded-full transition-colors ${
-              ongoing ? "bg-gray-900" : "bg-gray-200"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                ongoing ? "translate-x-4" : "translate-x-0.5"
-              }`}
-            />
-          </button>
-          <span className="text-sm text-gray-600">This trip is ongoing</span>
-        </div>
-
-        {/* End date — hidden when ongoing */}
-        {!ongoing && (
+        <form onSubmit={handleCreate} className="max-w-md space-y-5">
           <div>
-            <label
-              htmlFor="end_date"
-              className="mb-1.5 block text-xs font-medium text-gray-600"
-            >
-              End date
+            <label htmlFor="title" className={labelClass}>
+              Trip name <span className="text-red-400">*</span>
             </label>
             <input
-              id="end_date"
-              type="date"
-              value={endDate}
-              min={startDate || undefined}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-gray-400"
+              id="title"
+              type="text"
+              autoFocus
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Tokyo Winter 2025"
+              className={inputClass}
             />
           </div>
-        )}
 
-        {/* Timezone */}
-        <div>
-          <label
-            htmlFor="timezone"
-            className="mb-1.5 block text-xs font-medium text-gray-600"
+          <div>
+            <label htmlFor="start_date" className={labelClass}>
+              Start date
+            </label>
+            <input
+              id="start_date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={ongoing}
+              onClick={() => setOngoing((v) => !v)}
+              className={`relative h-5 w-9 flex-shrink-0 rounded-full transition-colors ${
+                ongoing ? "bg-[#2D323B]" : "bg-stone-200"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                  ongoing ? "translate-x-4" : "translate-x-0.5"
+                }`}
+              />
+            </button>
+            <span className="text-sm text-stone-500">This trip is ongoing</span>
+          </div>
+
+          {!ongoing && (
+            <div>
+              <label htmlFor="end_date" className={labelClass}>
+                End date
+              </label>
+              <input
+                id="end_date"
+                type="date"
+                value={endDate}
+                min={startDate || undefined}
+                onChange={(e) => setEndDate(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+          )}
+
+          <div>
+            <label htmlFor="timezone" className={labelClass}>
+              Timezone
+            </label>
+            <select
+              id="timezone"
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+              className={inputClass}
+            >
+              {TIMEZONES.map((tz) => (
+                <option key={tz} value={tz}>
+                  {tz.replace(/_/g, " ")}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="cover_photo" className={labelClass}>
+              Cover photo URL
+            </label>
+            <input
+              id="cover_photo"
+              type="url"
+              value={coverPhotoUrl}
+              onChange={(e) => setCoverPhotoUrl(e.target.value)}
+              placeholder="https://..."
+              className={inputClass}
+            />
+          </div>
+
+          {error && <p className="text-xs text-red-500">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={loading || !title.trim()}
+            className="w-full rounded-full bg-[#2D323B] py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-80 disabled:opacity-50"
           >
-            Timezone
-          </label>
-          <select
-            id="timezone"
-            value={timezone}
-            onChange={(e) => setTimezone(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-gray-400"
-          >
-            {TIMEZONES.map((tz) => (
-              <option key={tz} value={tz}>
-                {tz.replace(/_/g, " ")}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Cover photo URL */}
-        <div>
-          <label
-            htmlFor="cover_photo"
-            className="mb-1.5 block text-xs font-medium text-gray-600"
-          >
-            Cover photo URL
-          </label>
-          <input
-            id="cover_photo"
-            type="url"
-            value={coverPhotoUrl}
-            onChange={(e) => setCoverPhotoUrl(e.target.value)}
-            placeholder="https://..."
-            className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-gray-400"
-          />
-        </div>
-
-        {error && <p className="text-xs text-red-500">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={loading || !title.trim()}
-          className="w-full rounded-xl bg-black py-2.5 text-sm font-semibold text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
-        >
-          {loading ? "Creating..." : "Create Trip"}
-        </button>
-      </form>
-    </main>
+            {loading ? "Creating..." : "Create Trip"}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }

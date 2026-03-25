@@ -196,7 +196,7 @@ export function RecorderBar({
   return (
     <>
       {/* Recorder Bar */}
-      <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
+      <div className="flex items-center gap-4 rounded-2xl border border-stone-200 px-5 py-4">
         {state === "idle" && (
           <>
             <div className="flex flex-1 items-center gap-3">
@@ -280,8 +280,8 @@ export function RecorderBar({
 
       {/* Save to Trip Modal (only used when fixedTripId is not set) */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center">
-          <div className="w-full max-w-md rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-2xl">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 sm:items-center">
+          <div className="w-full max-w-md rounded-t-3xl bg-white p-6 shadow-xl sm:rounded-2xl">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-bold text-[#2D323B]">
                 Save Recording
