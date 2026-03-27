@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Mic, FileText, Clock, AlertCircle } from "lucide-react";
+import { ArrowLeft, Mic, FileText, Clock, AlertCircle, PenLine } from "lucide-react";
 import { RecorderBar } from "@/components/recorder-bar";
+import { WriteEntryBar } from "@/components/write-entry-bar";
 import Image from "next/image";
 
 type Entry = {
@@ -53,6 +54,7 @@ function StatusBadge({ status }: { status: string }) {
     processing: { label: "Processing", className: "text-blue-500" },
     done: { label: "Transcribed", className: "text-green-600" },
     failed: { label: "Failed", className: "text-red-500" },
+    journal: { label: "Journal", className: "text-violet-500" },
   };
 
   const config = map[status] ?? { label: status, className: "text-stone-400" };
@@ -65,6 +67,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function EntryIcon({ status }: { status: string }) {
+  if (status === "journal") return <PenLine className="h-4 w-4 text-violet-500" />;
   if (status === "done") return <FileText className="h-4 w-4 text-green-600" />;
   if (status === "failed") return <AlertCircle className="h-4 w-4 text-red-400" />;
   if (status === "processing") return <Clock className="h-4 w-4 text-blue-500" />;
@@ -138,9 +141,10 @@ export default async function TripPage({
           )}
         </div>
 
-        {/* Recorder */}
-        <section className="mb-10">
+        {/* Recorder + Journal */}
+        <section className="mb-10 space-y-3">
           <RecorderBar fixedTripId={trip.id} />
+          <WriteEntryBar tripId={trip.id} />
         </section>
 
         {/* Divider */}
@@ -205,7 +209,7 @@ export default async function TripPage({
             <div className="rounded-2xl border border-dashed border-stone-200 p-10 text-center">
               <Mic className="mx-auto mb-3 h-6 w-6 text-stone-300" />
               <p className="text-sm text-stone-400">No entries yet.</p>
-              <p className="mt-1 text-xs text-stone-300">Record a memory above.</p>
+              <p className="mt-1 text-xs text-stone-300">Record a memory or write a journal entry above.</p>
             </div>
           )}
         </section>

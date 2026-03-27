@@ -47,7 +47,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-[#2D323B]">
+    <div className="min-h-screen bg-white py-4 font-sans text-[#2D323B]">
       {/* Navbar */}
       <header className="mx-auto flex h-14 max-w-3xl items-center justify-between px-6">
         <span className="text-sm font-medium tracking-tight">pravas</span>
@@ -97,7 +97,7 @@ export default function LandingPage() {
       </div>
 
       {/* Features */}
-      <section className="mx-auto grid max-w-3xl grid-cols-3 gap-8 px-6 py-16 text-center">
+      <section className="mx-auto grid max-w-3xl grid-cols-3 gap-8 px-6 py-8 text-center">
         {features.map((f) => (
           <div key={f.title}>
             <div className="mb-3 text-3xl">{f.emoji}</div>

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ImagePlus, X } from "lucide-react";
+import Image from "next/image";
 
 const TIMEZONES = [
   "Africa/Cairo",
@@ -45,9 +46,11 @@ export default function NewTripPage() {
   const [timezone, setTimezone] = useState(
     () => Intl.DateTimeFormat().resolvedOptions().timeZone,
   );
-  const [coverPhotoUrl, setCoverPhotoUrl] = useState("");
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const supabase = createClient();
   const router = useRouter();
@@ -67,6 +70,24 @@ export default function NewTripPage() {
       return;
     }
 
+    let coverPhotoUrl: string | null = null;
+    if (coverFile) {
+      const ext = coverFile.name.split(".").pop() ?? "jpg";
+      const storagePath = `${user.id}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("trip-covers")
+        .upload(storagePath, coverFile, { contentType: coverFile.type });
+      if (uploadError) {
+        setError(uploadError.message);
+        setLoading(false);
+        return;
+      }
+      const { data: { publicUrl } } = supabase.storage
+        .from("trip-covers")
+        .getPublicUrl(storagePath);
+      coverPhotoUrl = publicUrl;
+    }
+
     const { data: trip, error: err } = await supabase
       .from("trips")
       .insert({
@@ -74,7 +95,7 @@ export default function NewTripPage() {
         start_date: startDate || null,
         end_date: ongoing ? null : endDate || null,
         timezone: timezone || null,
-        cover_photo_url: coverPhotoUrl.trim() || null,
+        cover_photo_url: coverPhotoUrl,
         created_by: user.id,
       })
       .select("id")
@@ -112,7 +133,7 @@ export default function NewTripPage() {
           <p className="mt-1 text-sm text-stone-400">Where are you headed?</p>
         </div>
 
-        <form onSubmit={handleCreate} className="max-w-md space-y-5">
+        <form onSubmit={handleCreate} className="space-y-5">
           <div>
             <label htmlFor="title" className={labelClass}>
               Trip name <span className="text-red-400">*</span>
@@ -196,17 +217,49 @@ export default function NewTripPage() {
           </div>
 
           <div>
-            <label htmlFor="cover_photo" className={labelClass}>
-              Cover photo URL
-            </label>
+            <label className={labelClass}>Cover photo</label>
             <input
-              id="cover_photo"
-              type="url"
-              value={coverPhotoUrl}
-              onChange={(e) => setCoverPhotoUrl(e.target.value)}
-              placeholder="https://..."
-              className={inputClass}
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                setCoverFile(file);
+                setCoverPreview(file ? URL.createObjectURL(file) : null);
+              }}
             />
+            {coverPreview ? (
+              <div className="relative h-40 w-full overflow-hidden rounded-xl border border-stone-200">
+                <Image
+                  src={coverPreview}
+                  alt="Cover preview"
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCoverFile(null);
+                    setCoverPreview(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  className="absolute right-2 top-2 rounded-full bg-black/50 p-1 text-white transition-colors hover:bg-black/70"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex w-full items-center gap-3 rounded-xl border border-dashed border-stone-200 px-4 py-5 text-stone-400 transition-colors hover:border-stone-300 hover:text-stone-500"
+              >
+                <ImagePlus className="h-5 w-5 flex-shrink-0" />
+                <span className="text-sm">Upload a cover photo</span>
+              </button>
+            )}
           </div>
 
           {error && <p className="text-xs text-red-500">{error}</p>}
