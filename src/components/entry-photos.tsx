@@ -29,10 +29,12 @@ export function EntryPhotos({
   entryId,
   userId,
   initialPhotos,
+  centeredControls = false,
 }: {
   entryId: string;
   userId: string;
   initialPhotos: Photo[];
+  centeredControls?: boolean;
 }) {
   const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
   const [optimistic, setOptimistic] = useState<OptimisticPhoto[]>([]);
@@ -127,7 +129,7 @@ export function EntryPhotos({
   return (
     <div>
       {/* Count badge + add button */}
-      <div className="mb-3 flex items-center justify-between">
+      <div className={`mb-3 flex items-center justify-between ${centeredControls ? "mx-auto max-w-3xl px-6" : "px-2"}`}>
         <span className="text-xs text-gray-400">
           {allPhotos.length} / {MAX_ENTRY_PHOTOS} photos
         </span>
@@ -154,7 +156,7 @@ export function EntryPhotos({
 
       {/* Error */}
       {error && (
-        <div className="mb-3 flex items-center justify-between rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">
+        <div className={`mb-3 flex items-center justify-between rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600 ${centeredControls ? "mx-auto max-w-3xl px-6" : "mx-2"}`}>
           <span>{error}</span>
           <button onClick={() => setError(null)}>
             <X className="h-3.5 w-3.5" />
@@ -164,7 +166,7 @@ export function EntryPhotos({
 
       {/* Polaroid photos on a string */}
       {allPhotos.length > 0 ? (
-        <div className="relative px-1">
+        <div className={`relative ${centeredControls ? "px-4" : "px-1"}`}>
           {/* The string — loose catenary curve */}
           <svg
             viewBox="0 0 1000 36"
@@ -239,7 +241,7 @@ export function EntryPhotos({
       ) : (
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 py-8 text-center transition-colors hover:border-gray-300"
+          className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 py-8 text-center transition-colors hover:border-gray-300 ${centeredControls ? "mx-auto max-w-3xl px-6" : ""}`}
         >
           <ImagePlus className="mb-2 h-6 w-6 text-gray-300" />
           <p className="text-sm text-gray-400">Add photos</p>

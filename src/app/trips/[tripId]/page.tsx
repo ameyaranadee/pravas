@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Mic, FileText, Clock, AlertCircle, PenLine } from "lucide-react";
+import { ArrowLeft, Mic, FileText, Clock, AlertCircle, PenLine, BookOpen } from "lucide-react";
 import { RecorderBar } from "@/components/recorder-bar";
 import { WriteEntryBar } from "@/components/write-entry-bar";
 import { TripActions } from "@/components/trip-actions";
@@ -12,7 +12,9 @@ type Entry = {
   entry_date: string;
   created_at: string | null;
   transcription_status: string;
+  journal_text: string | null;
   transcript_en: string | null;
+  audio_url: string | null;
 };
 
 type EntryPhoto = {
@@ -49,26 +51,35 @@ function PhotoStack({ photos }: { photos: EntryPhoto[] }) {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, hasJournal, hasAudio }: { status: string; hasJournal: boolean; hasAudio: boolean }) {
+  if (hasJournal && hasAudio) {
+    const audioMap: Record<string, string> = {
+      pending: "text-stone-400",
+      processing: "text-blue-500",
+      done: "text-green-600",
+      failed: "text-red-500",
+    };
+    return (
+      <span className={`text-xs font-medium ${audioMap[status] ?? "text-stone-400"}`}>
+        Written + Audio
+      </span>
+    );
+  }
+  if (hasJournal) return <span className="text-xs font-medium text-violet-500">Written</span>;
+
   const map: Record<string, { label: string; className: string }> = {
     pending: { label: "Pending", className: "text-stone-400" },
     processing: { label: "Processing", className: "text-blue-500" },
     done: { label: "Transcribed", className: "text-green-600" },
     failed: { label: "Failed", className: "text-red-500" },
-    journal: { label: "Journal", className: "text-violet-500" },
   };
-
   const config = map[status] ?? { label: status, className: "text-stone-400" };
-
-  return (
-    <span className={`text-xs font-medium ${config.className}`}>
-      {config.label}
-    </span>
-  );
+  return <span className={`text-xs font-medium ${config.className}`}>{config.label}</span>;
 }
 
-function EntryIcon({ status }: { status: string }) {
-  if (status === "journal") return <PenLine className="h-4 w-4 text-violet-500" />;
+function EntryIcon({ status, hasJournal, hasAudio }: { status: string; hasJournal: boolean; hasAudio: boolean }) {
+  if (hasJournal && hasAudio) return <BookOpen className="h-4 w-4 text-indigo-500" />;
+  if (hasJournal) return <PenLine className="h-4 w-4 text-violet-500" />;
   if (status === "done") return <FileText className="h-4 w-4 text-green-600" />;
   if (status === "failed") return <AlertCircle className="h-4 w-4 text-red-400" />;
   if (status === "processing") return <Clock className="h-4 w-4 text-blue-500" />;
@@ -91,7 +102,7 @@ export default async function TripPage({
       .single(),
     supabase
       .from("entries")
-      .select("id, entry_date, created_at, transcription_status, transcript_en")
+      .select("id, entry_date, created_at, transcription_status, journal_text, transcript_en, audio_url")
       .eq("trip_id", tripId)
       .order("entry_date", { ascending: false }),
   ]);
@@ -165,9 +176,10 @@ export default async function TripPage({
             <div className="divide-y divide-stone-100">
               {entries.map((entry: Entry) => {
                 const entryDate = new Date(entry.entry_date);
-                const createdAt = entry.created_at
-                  ? new Date(entry.created_at)
-                  : null;
+                const createdAt = entry.created_at ? new Date(entry.created_at) : null;
+                const hasJournal = !!entry.journal_text;
+                const hasAudio = !!entry.audio_url;
+                const previewText = entry.journal_text ?? entry.transcript_en;
 
                 return (
                   <Link
@@ -176,7 +188,7 @@ export default async function TripPage({
                     className="group flex items-center gap-4 py-4 transition-colors hover:text-stone-600"
                   >
                     <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-stone-50">
-                      <EntryIcon status={entry.transcription_status} />
+                      <EntryIcon status={entry.transcription_status} hasJournal={hasJournal} hasAudio={hasAudio} />
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -187,9 +199,9 @@ export default async function TripPage({
                           year: "numeric",
                         })}
                       </p>
-                      {entry.transcript_en ? (
+                      {previewText ? (
                         <p className="mt-0.5 truncate text-xs text-stone-400">
-                          {entry.transcript_en}
+                          {previewText}
                         </p>
                       ) : createdAt ? (
                         <p className="mt-0.5 text-xs text-stone-400">
@@ -209,7 +221,7 @@ export default async function TripPage({
                       )}
                     </div>
 
-                    <StatusBadge status={entry.transcription_status} />
+                    <StatusBadge status={entry.transcription_status} hasJournal={hasJournal} hasAudio={hasAudio} />
                   </Link>
                 );
               })}

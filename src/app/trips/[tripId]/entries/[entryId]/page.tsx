@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Loader, AlertCircle, PenLine } from "lucide-react";
-import { TranscriptTabs } from "./transcript-tabs";
+import { ArrowLeft, Mic, PenLine } from "lucide-react";
+import { EntryContent } from "./entry-content";
+import { AddWrittenLog } from "./add-written-log";
+import { AddAudioLog } from "./add-audio-log";
 import { EntryPhotos } from "@/components/entry-photos";
 
 export default async function EntryPage({
@@ -21,7 +23,7 @@ export default async function EntryPage({
     supabase
       .from("entries")
       .select(
-        "id, entry_date, created_at, audio_url, transcription_status, transcript_mr, transcript_en, transcription_error",
+        "id, entry_date, created_at, audio_url, transcription_status, transcript_mr, transcript_en, transcription_error, journal_text",
       )
       .eq("id", entryId)
       .single(),
@@ -34,14 +36,25 @@ export default async function EntryPage({
 
   if (!entry) notFound();
 
-  const entryDate = new Date(entry.entry_date).toLocaleDateString("en-US", {
-    weekday: "long",
+  const status = entry.transcription_status as string;
+  const hasJournal = !!entry.journal_text;
+  const hasAudio = !!entry.audio_url;
+  const hasBoth = hasJournal && hasAudio;
+
+  const date = new Date(entry.entry_date);
+  const weekday = date.toLocaleDateString("en-US", { weekday: "long" });
+  const dateStr = date.toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
   });
 
-  const status = entry.transcription_status as string;
+  const timeStr = entry.created_at
+    ? new Date(entry.created_at).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : null;
 
   return (
     <div className="min-h-screen bg-white font-sans text-[#2D323B]">
@@ -57,114 +70,94 @@ export default async function EntryPage({
         <span className="text-sm font-medium tracking-tight">pravas</span>
       </header>
 
-      <div className="mx-auto max-w-3xl px-6 pb-20">
-        {/* Entry heading */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight">{entryDate}</h1>
-          {entry.created_at && (
-            <p className="mt-1 text-sm text-stone-400">
-              {status === "journal" ? "Written" : "Recorded"} at{" "}
-              {new Date(entry.created_at).toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: "2-digit",
-              })}
-            </p>
+      {/* Centered content */}
+      <div className="mx-auto max-w-3xl px-6">
+        {/* Entry header */}
+        <div className="mb-10 border-b border-stone-100 pb-8">
+          <p className="mb-1 text-sm font-medium text-stone-400">{weekday}</p>
+          <h1 className="text-3xl font-bold tracking-tight">{dateStr}</h1>
+          {timeStr && (
+            <div className="mt-3 flex items-center gap-3 text-xs text-stone-400">
+              {hasJournal && (
+                <span className="flex items-center gap-1.5">
+                  <PenLine className="h-3.5 w-3.5" />
+                  Written
+                </span>
+              )}
+              {hasBoth && <span>·</span>}
+              {hasAudio && (
+                <span className="flex items-center gap-1.5">
+                  <Mic className="h-3.5 w-3.5" />
+                  Audio log
+                </span>
+              )}
+              <span>· {timeStr}</span>
+            </div>
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr,260px]">
-          {/* Left column */}
-          <div className="space-y-6">
-            {status === "journal" ? (
-              /* Journal entry */
-              <section>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-stone-400">
-                  Journal
-                </p>
-                <div className="rounded-2xl border border-stone-200 p-5">
-                  <div className="flex items-center gap-2 mb-4 text-violet-500">
-                    <PenLine className="h-4 w-4" />
-                    <span className="text-xs font-semibold uppercase tracking-widest">Written entry</span>
-                  </div>
-                  <p className="leading-relaxed text-[#2D323B] whitespace-pre-wrap">
-                    {entry.transcript_en}
-                  </p>
-                </div>
-              </section>
-            ) : (
-              <>
-                {/* Audio */}
-                <section>
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-stone-400">
-                    Recording
-                  </p>
-                  <div className="rounded-2xl border border-stone-200 p-5">
-                    <audio controls className="w-full" preload="metadata">
-                      <source src={entry.audio_url} type="audio/webm; codecs=opus" />
-                      <source src={entry.audio_url} type="audio/webm" />
-                    </audio>
-                  </div>
-                </section>
-
-                {/* Transcription */}
-                <section>
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-stone-400">
-                    Transcription
-                  </p>
-                  <div className="rounded-2xl border border-stone-200 p-5">
-                    {status === "done" && entry.transcript_mr && entry.transcript_en && (
-                      <TranscriptTabs
-                        transcriptMr={entry.transcript_mr}
-                        transcriptEn={entry.transcript_en}
-                      />
-                    )}
-
-                    {(status === "pending" || status === "processing") && (
-                      <div className="flex items-center gap-3 py-2 text-sm text-stone-400">
-                        <Loader className="h-4 w-4 animate-spin" />
-                        <span>
-                          {status === "processing"
-                            ? "Transcription in progress..."
-                            : "Queued for transcription"}
-                        </span>
-                      </div>
-                    )}
-
-                    {status === "failed" && (
-                      <div className="flex items-start gap-3 text-sm text-red-500">
-                        <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                        <div>
-                          <p className="font-medium">Transcription failed</p>
-                          {entry.transcription_error && (
-                            <p className="mt-0.5 text-xs text-red-400">
-                              {entry.transcription_error}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </section>
-              </>
-            )}
-          </div>
-
-          {/* Right column — Photos */}
-          <div className="lg:sticky lg:top-8 lg:self-start">
-            <section>
-              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-stone-400">
-                Photos
+        {/* Written log */}
+        {hasJournal && (
+          <div className="mb-14">
+            {hasBoth && (
+              <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-stone-400">
+                Written log
               </p>
-              <div className="rounded-2xl border border-stone-200 p-5">
-                <EntryPhotos
-                  entryId={entry.id}
-                  userId={user?.id ?? ""}
-                  initialPhotos={photos ?? []}
-                />
-              </div>
-            </section>
+            )}
+            <p className="text-base leading-8 text-[#2D323B] whitespace-pre-wrap">
+              {entry.journal_text}
+            </p>
           </div>
+        )}
+
+        {/* Divider if both */}
+        {hasBoth && <hr className="mb-14 border-stone-100" />}
+
+        {/* Audio log */}
+        {hasAudio && (
+          <div className="mb-16">
+            {hasBoth && (
+              <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-stone-400">
+                Audio log
+              </p>
+            )}
+            <EntryContent
+              status={status}
+              audioUrl={entry.audio_url}
+              transcriptEn={entry.transcript_en}
+              transcriptMr={entry.transcript_mr}
+              transcriptionError={entry.transcription_error}
+            />
+          </div>
+        )}
+        {/* Add written log (only if audio exists but no journal) */}
+        {hasAudio && !hasJournal && (
+          <div className="mb-16">
+            <AddWrittenLog entryId={entry.id} />
+          </div>
+        )}
+
+        {/* Add recording (only if journal exists but no audio) */}
+        {hasJournal && !hasAudio && (
+          <div className="mb-16">
+            <AddAudioLog entryId={entry.id} />
+          </div>
+        )}
+      </div>
+
+      {/* Photos — full bleed */}
+      <div className="border-t border-stone-100 pb-24">
+        <div className="mx-auto max-w-3xl px-6">
+          <p className="mb-5 pt-8 text-xs font-semibold uppercase tracking-widest text-stone-400">
+            Photos
+          </p>
         </div>
+        <EntryPhotos
+          entryId={entry.id}
+          userId={user?.id ?? ""}
+          initialPhotos={photos ?? []}
+          centeredControls
+        />
       </div>
     </div>
   );

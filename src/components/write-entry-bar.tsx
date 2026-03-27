@@ -26,8 +26,8 @@ export function WriteEntryBar({ tripId }: { tripId: string }) {
         .insert({
           trip_id: tripId,
           entry_date: new Date().toISOString().split("T")[0],
-          transcription_status: "journal",
-          transcript_en: text.trim(),
+          transcription_status: "none",
+          journal_text: text.trim(),
           created_by: user.id,
         })
         .select("id")
