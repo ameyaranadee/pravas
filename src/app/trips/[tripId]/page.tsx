@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Mic, FileText, Clock, AlertCircle, PenLine } from "lucide-react";
 import { RecorderBar } from "@/components/recorder-bar";
 import { WriteEntryBar } from "@/components/write-entry-bar";
+import { TripActions } from "@/components/trip-actions";
 import Image from "next/image";
 
 type Entry = {
@@ -98,7 +99,7 @@ export default async function TripPage({
   if (!trip) notFound();
 
   const entryIds = (entries ?? []).map((e) => e.id);
-  let photosByEntryId: Record<string, EntryPhoto[]> = {};
+  const photosByEntryId: Record<string, EntryPhoto[]> = {};
 
   if (entryIds.length > 0) {
     const { data: allPhotos } = await supabase
@@ -108,7 +109,8 @@ export default async function TripPage({
       .order("created_at");
 
     for (const photo of allPhotos ?? []) {
-      if (!photosByEntryId[photo.entry_id]) photosByEntryId[photo.entry_id] = [];
+      if (!photosByEntryId[photo.entry_id])
+        photosByEntryId[photo.entry_id] = [];
       photosByEntryId[photo.entry_id].push(photo);
     }
   }
@@ -130,7 +132,10 @@ export default async function TripPage({
       <div className="mx-auto max-w-3xl px-6 pb-20">
         {/* Trip title */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight">{trip.title}</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold tracking-tight">{trip.title}</h1>
+            <TripActions tripId={trip.id} />
+          </div>
           {trip.start_date && (
             <p className="mt-1 text-sm text-stone-400">
               {new Date(trip.start_date).toLocaleDateString("en-US", {
@@ -160,7 +165,9 @@ export default async function TripPage({
             <div className="divide-y divide-stone-100">
               {entries.map((entry: Entry) => {
                 const entryDate = new Date(entry.entry_date);
-                const createdAt = entry.created_at ? new Date(entry.created_at) : null;
+                const createdAt = entry.created_at
+                  ? new Date(entry.created_at)
+                  : null;
 
                 return (
                   <Link
@@ -195,7 +202,9 @@ export default async function TripPage({
                       ) : null}
                       {(photosByEntryId[entry.id]?.length ?? 0) > 0 && (
                         <div className="mt-2">
-                          <PhotoStack photos={photosByEntryId[entry.id] ?? []} />
+                          <PhotoStack
+                            photos={photosByEntryId[entry.id] ?? []}
+                          />
                         </div>
                       )}
                     </div>
@@ -209,7 +218,9 @@ export default async function TripPage({
             <div className="rounded-2xl border border-dashed border-stone-200 p-10 text-center">
               <Mic className="mx-auto mb-3 h-6 w-6 text-stone-300" />
               <p className="text-sm text-stone-400">No entries yet.</p>
-              <p className="mt-1 text-xs text-stone-300">Record a memory or write a journal entry above.</p>
+              <p className="mt-1 text-xs text-stone-300">
+                Record a memory or write a journal entry above.
+              </p>
             </div>
           )}
         </section>

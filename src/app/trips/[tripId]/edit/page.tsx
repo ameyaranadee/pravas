@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ImagePlus, X } from "lucide-react";
 import Image from "next/image";
@@ -38,40 +38,60 @@ const TIMEZONES = [
   "UTC",
 ];
 
-export default function NewTripPage() {
+export default function EditTripPage() {
+  const params = useParams<{ tripId: string }>();
+  const tripId = params.tripId;
+
   const [title, setTitle] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [ongoing, setOngoing] = useState(false);
-  const [timezone, setTimezone] = useState(
-    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
-  );
-  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [timezone, setTimezone] = useState("");
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [error, setError] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
   const router = useRouter();
 
-  const handleCreate = async (e: React.FormEvent) => {
+  useEffect(() => {
+    supabase
+      .from("trips")
+      .select("title, start_date, end_date, timezone, cover_photo_url")
+      .eq("id", tripId)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setTitle(data.title ?? "");
+          setStartDate(data.start_date ?? "");
+          setEndDate(data.end_date ?? "");
+          setOngoing(!data.end_date);
+          setTimezone(data.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
+          setCoverPreview(data.cover_photo_url ?? null);
+        }
+        setFetching(false);
+      });
+  }, [tripId]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
     setLoading(true);
     setError("");
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    let coverPhotoUrl: string | null = coverPreview;
 
-    if (!user) {
-      router.push("/");
-      return;
-    }
-
-    let coverPhotoUrl: string | null = null;
     if (coverFile) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/");
+        return;
+      }
       const ext = coverFile.name.split(".").pop() ?? "jpg";
       const storagePath = `${user.id}/${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage
@@ -82,30 +102,28 @@ export default function NewTripPage() {
         setLoading(false);
         return;
       }
-      const { data: { publicUrl } } = supabase.storage
-        .from("trip-covers")
-        .getPublicUrl(storagePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("trip-covers").getPublicUrl(storagePath);
       coverPhotoUrl = publicUrl;
     }
 
-    const { data: trip, error: err } = await supabase
+    const { error: err } = await supabase
       .from("trips")
-      .insert({
+      .update({
         title: title.trim(),
         start_date: startDate || null,
         end_date: ongoing ? null : endDate || null,
         timezone: timezone || null,
         cover_photo_url: coverPhotoUrl,
-        created_by: user.id,
       })
-      .select("id")
-      .single();
+      .eq("id", tripId);
 
     if (err) {
       setError(err.message);
       setLoading(false);
     } else {
-      router.push(`/trips/${trip.id}`);
+      router.push(`/trips/${tripId}`);
     }
   };
 
@@ -113,12 +131,20 @@ export default function NewTripPage() {
     "w-full rounded-xl border border-stone-200 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-stone-400";
   const labelClass = "mb-1.5 block text-xs font-medium text-stone-500";
 
+  if (fetching) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="h-4 w-4 animate-pulse rounded-full bg-stone-300" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white font-sans text-[#2D323B]">
       {/* Navbar */}
       <header className="mx-auto flex h-14 max-w-3xl items-center justify-between px-6">
         <Link
-          href="/dashboard"
+          href={`/trips/${tripId}`}
           className="flex items-center gap-1.5 text-sm text-stone-500 transition-colors hover:text-[#2D323B]"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -129,11 +155,11 @@ export default function NewTripPage() {
 
       <div className="mx-auto max-w-3xl px-6 pb-20">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight">New Trip</h1>
-          <p className="mt-1 text-sm text-stone-400">Where are you headed?</p>
+          <h1 className="text-2xl font-bold tracking-tight">Edit Trip</h1>
+          <p className="mt-1 text-sm text-stone-400">Update your trip details.</p>
         </div>
 
-        <form onSubmit={handleCreate} className="space-y-5">
+        <form onSubmit={handleSave} className="space-y-5">
           <div>
             <label htmlFor="title" className={labelClass}>
               Trip name <span className="text-red-400">*</span>
@@ -269,7 +295,7 @@ export default function NewTripPage() {
             disabled={loading || !title.trim()}
             className="w-full rounded-full bg-[#2D323B] py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-80 disabled:opacity-50"
           >
-            {loading ? "Creating..." : "Create Trip"}
+            {loading ? "Saving..." : "Save Changes"}
           </button>
         </form>
       </div>

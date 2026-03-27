@@ -53,7 +53,9 @@ export function WriteEntryBar({ tripId }: { tripId: string }) {
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
             <PenLine className="h-5 w-5 text-gray-400" />
           </div>
-          <span className="text-sm text-gray-400">Or write a journal entry</span>
+          <span className="text-sm text-gray-400">
+            Or write a journal entry
+          </span>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -68,7 +70,9 @@ export function WriteEntryBar({ tripId }: { tripId: string }) {
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 sm:items-center">
           <div className="w-full max-w-md rounded-t-3xl bg-white p-6 shadow-xl sm:rounded-2xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-[#2D323B]">Journal Entry</h2>
+              <h2 className="text-lg font-bold text-[#2D323B]">
+                Journal Entry
+              </h2>
               <button
                 onClick={close}
                 className="rounded-full p-1 text-gray-400 transition-colors hover:text-gray-600"
