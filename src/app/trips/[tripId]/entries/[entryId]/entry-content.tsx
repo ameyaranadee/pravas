@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mic, ChevronDown, ChevronUp, Loader, AlertCircle } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 type Props = {
+  entryId: string;
   status: string;
   audioUrl: string | null;
   transcriptEn: string | null;
@@ -12,14 +14,43 @@ type Props = {
 };
 
 export function EntryContent({
-  status,
+  entryId,
+  status: initialStatus,
   audioUrl,
-  transcriptEn,
-  transcriptMr,
-  transcriptionError,
+  transcriptEn: initialTranscriptEn,
+  transcriptMr: initialTranscriptMr,
+  transcriptionError: initialError,
 }: Props) {
+  const [status, setStatus] = useState(initialStatus);
+  const [transcriptEn, setTranscriptEn] = useState(initialTranscriptEn);
+  const [transcriptMr, setTranscriptMr] = useState(initialTranscriptMr);
+  const [transcriptionError, setTranscriptionError] = useState(initialError);
   const [lang, setLang] = useState<"en" | "mr">("en");
   const [audioOpen, setAudioOpen] = useState(false);
+
+  const supabase = createClient();
+
+  // Poll while transcription is in progress
+  useEffect(() => {
+    if (status !== "pending" && status !== "processing") return;
+
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from("entries")
+        .select("transcription_status, transcript_en, transcript_mr, transcription_error")
+        .eq("id", entryId)
+        .single();
+
+      if (!data || data.transcription_status === status) return;
+
+      setStatus(data.transcription_status);
+      setTranscriptEn(data.transcript_en ?? null);
+      setTranscriptMr(data.transcript_mr ?? null);
+      setTranscriptionError(data.transcription_error ?? null);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [status, entryId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (status === "done" && transcriptEn) {
     return (

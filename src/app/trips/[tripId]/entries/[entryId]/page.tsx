@@ -122,6 +122,7 @@ export default async function EntryPage({
               </p>
             )}
             <EntryContent
+              entryId={entry.id}
               status={status}
               audioUrl={entry.audio_url}
               transcriptEn={entry.transcript_en}
