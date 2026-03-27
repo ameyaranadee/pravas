@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import Image from "next/image";
 import { Plus, ChevronRight, MapPin, LogOut } from "lucide-react";
 import { RecorderBar } from "@/components/recorder-bar";
 import { useRouter } from "next/navigation";
@@ -98,10 +99,24 @@ export default function Dashboard() {
             </p>
             <Link
               href={`/trips/${activeTrip.id}`}
-              className="group flex items-start justify-between rounded-2xl border border-stone-200 p-6 transition-colors hover:bg-stone-50"
+              className="group relative flex items-end justify-between overflow-hidden rounded-2xl border border-stone-200 p-6 transition-colors"
+              style={{ minHeight: "140px" }}
             >
-              <div>
-                <div className="mb-1.5 flex items-center gap-1.5 text-stone-400">
+              {/* Cover photo background */}
+              {activeTrip.cover_photo_url && (
+                <>
+                  <Image
+                    src={activeTrip.cover_photo_url}
+                    alt={activeTrip.title}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    unoptimized
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                </>
+              )}
+              <div className={`relative ${activeTrip.cover_photo_url ? "text-white" : ""}`}>
+                <div className={`mb-1.5 flex items-center gap-1.5 ${activeTrip.cover_photo_url ? "text-white/70" : "text-stone-400"}`}>
                   <MapPin className="h-3.5 w-3.5" />
                   <span className="text-xs">
                     {activeTrip.start_date
@@ -115,7 +130,7 @@ export default function Dashboard() {
                 </div>
                 <h3 className="text-xl font-bold tracking-tight">{activeTrip.title}</h3>
               </div>
-              <ChevronRight className="mt-1 h-4 w-4 flex-shrink-0 text-stone-300 transition-transform group-hover:translate-x-0.5" />
+              <ChevronRight className={`relative mb-1 h-4 w-4 flex-shrink-0 transition-transform group-hover:translate-x-0.5 ${activeTrip.cover_photo_url ? "text-white/60" : "text-stone-300"}`} />
             </Link>
           </section>
         ) : (
@@ -147,15 +162,28 @@ export default function Dashboard() {
 
           <div className="divide-y divide-stone-100">
             {trips.length > 0 ? (
-              trips.map((trip, i) => (
+              trips.map((trip) => (
                 <Link
                   key={trip.id}
                   href={`/trips/${trip.id}`}
                   className="group flex items-center gap-4 py-3.5 transition-colors hover:text-stone-600"
                 >
-                  <span className="w-5 flex-shrink-0 text-right text-xs font-medium text-stone-300">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
+                  {/* Thumbnail */}
+                  <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-stone-100">
+                    {trip.cover_photo_url ? (
+                      <Image
+                        src={trip.cover_photo_url}
+                        alt={trip.title}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-sm font-bold text-stone-400">
+                        {trip.title.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="truncate text-sm font-medium">{trip.title}</p>
                     <p className="truncate text-xs text-stone-400">

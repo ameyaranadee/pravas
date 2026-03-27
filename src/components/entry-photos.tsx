@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ImagePlus, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
@@ -39,8 +39,16 @@ export function EntryPhotos({
   const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
   const [optimistic, setOptimistic] = useState<OptimisticPhoto[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
+
+  useEffect(() => {
+    if (!lightboxUrl) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setLightboxUrl(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightboxUrl]);
 
   const allPhotos: DisplayPhoto[] = [...photos, ...optimistic];
   const remaining = MAX_ENTRY_PHOTOS - allPhotos.length;
@@ -203,7 +211,8 @@ export function EntryPhotos({
               return (
                 <div
                   key={photo.id}
-                  className={`group relative z-10 flex-shrink-0 bg-white px-2 pb-5 pt-10 shadow-md transition-all duration-200 hover:scale-105 hover:rotate-0 hover:z-30 hover:shadow-xl ${rotation}`}
+                  onClick={() => !isOptimistic(photo) && setLightboxUrl(photo.url)}
+                  className={`group relative z-10 flex-shrink-0 bg-white px-2 pb-5 pt-10 shadow-md transition-all duration-200 hover:scale-105 hover:rotate-0 hover:z-30 hover:shadow-xl ${!isOptimistic(photo) ? "cursor-pointer" : ""} ${rotation}`}
                 >
                   {/* Hole where string passes through */}
                   <div className="absolute left-1/2 z-30 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-inner ring-1 ring-gray-300" style={{ top: "5px" }} />
@@ -254,6 +263,33 @@ export function EntryPhotos({
             className="hidden"
             onChange={handleFileChange}
           />
+        </div>
+      )}
+      {/* Lightbox */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button
+            onClick={() => setLightboxUrl(null)}
+            className="absolute right-4 top-4 rounded-full p-2 text-white/70 transition-colors hover:text-white"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          <div
+            className="relative max-h-[90vh] max-w-[90vw]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={lightboxUrl}
+              alt="Photo"
+              width={1200}
+              height={900}
+              className="max-h-[90vh] w-auto rounded-lg object-contain"
+              unoptimized
+            />
+          </div>
         </div>
       )}
     </div>
