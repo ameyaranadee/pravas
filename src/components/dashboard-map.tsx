@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import Map, { Marker, Popup, type MarkerEvent } from "react-map-gl";
+import Map, { Marker, Popup } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Image from "next/image";
 
@@ -46,12 +46,14 @@ function MapInner({ trips }: { trips: LocatedTrip[] }) {
           longitude={trip.longitude}
           latitude={trip.latitude}
           anchor="bottom"
-          onClick={(e: MarkerEvent) => {
-            e.originalEvent?.stopPropagation();
-            setSelectedTrip(selectedTrip?.id === trip.id ? null : trip);
-          }}
         >
-          <div className="cursor-pointer">
+          <div
+            className="cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedTrip(selectedTrip?.id === trip.id ? null : trip);
+            }}
+          >
             {trip.cover_photo_url ? (
               <div className="h-8 w-8 overflow-hidden rounded-full border-2 border-white shadow-md transition-transform hover:scale-110">
                 <Image

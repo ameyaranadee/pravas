@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Map, { Marker, Popup, NavigationControl, type MarkerEvent } from "react-map-gl";
+import Map, { Marker, Popup, NavigationControl } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Image from "next/image";
 import Link from "next/link";
@@ -62,12 +62,14 @@ export default function MapView({
               longitude={trip.longitude}
               latitude={trip.latitude}
               anchor="bottom"
-              onClick={(e: MarkerEvent) => {
-                e.originalEvent?.stopPropagation();
-                setSelectedTrip(trip);
-              }}
             >
-              <div className="cursor-pointer">
+              <div
+                className="cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedTrip(trip);
+                }}
+              >
                 {trip.cover_photo_url ? (
                   <div
                     className="h-10 w-10 overflow-hidden rounded-full border-2 shadow-md transition-transform hover:scale-110"

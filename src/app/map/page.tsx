@@ -25,14 +25,12 @@ export default async function MapPage() {
     longitude: trip.longitude as number,
     location_name: trip.location_name as string | null,
     tags: (
-      (
-        trip.trip_tag_assignments as Array<{
-          trip_tags: { id: string; name: string; color: string } | null;
-        }>
-      )
+      (trip.trip_tag_assignments as unknown as Array<{
+        trip_tags: { id: string; name: string; color: string } | null;
+      }>)
         ?.map((a) => a.trip_tags)
-        .filter(Boolean) ?? []
-    ) as Array<{ id: string; name: string; color: string }>,
+        .filter((t): t is { id: string; name: string; color: string } => t != null) ?? []
+    ),
   }));
 
   return (
