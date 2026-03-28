@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, ChevronRight, MapPin, LogOut, Map } from "lucide-react";
+import { Plus, ChevronRight, MapPin, LogOut } from "lucide-react";
 import { RecorderBar } from "@/components/recorder-bar";
+import { DashboardMap } from "@/components/dashboard-map";
 import { useRouter } from "next/navigation";
 
 type Trip = {
@@ -14,6 +15,8 @@ type Trip = {
   start_date: string | null;
   end_date: string | null;
   cover_photo_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 export default function Dashboard() {
@@ -74,24 +77,15 @@ export default function Dashboard() {
       {/* Navbar */}
       <header className="mx-auto flex h-14 max-w-3xl items-center justify-between px-6">
         <span className="text-sm font-medium tracking-tight">pravas</span>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/map"
-            className="flex items-center gap-1.5 rounded-full border border-stone-200 px-3 py-1.5 text-sm text-stone-500 transition-colors hover:border-stone-300 hover:text-[#2D323B]"
-          >
-            <Map className="h-3.5 w-3.5" />
-            Map
-          </Link>
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-2 rounded-full border border-stone-200 px-3 py-1.5 text-sm text-stone-500 transition-colors hover:border-stone-300 hover:text-[#2D323B]"
-          >
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-stone-800 text-[10px] font-bold text-white">
-              {userInitials}
-            </div>
-            <LogOut className="h-3.5 w-3.5" />
-          </button>
-        </div>
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-2 rounded-full border border-stone-200 px-3 py-1.5 text-sm text-stone-500 transition-colors hover:border-stone-300 hover:text-[#2D323B]"
+        >
+          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-stone-800 text-[10px] font-bold text-white">
+            {userInitials}
+          </div>
+          <LogOut className="h-3.5 w-3.5" />
+        </button>
       </header>
 
       <div className="mx-auto max-w-3xl px-6 pb-20">
@@ -99,6 +93,9 @@ export default function Dashboard() {
         <section className="mb-10">
           <RecorderBar trips={trips} />
         </section>
+
+        {/* Travel map */}
+        <DashboardMap trips={trips} />
 
         {/* Current Trip */}
         {activeTrip ? (

@@ -36,7 +36,11 @@ export default function MapView({
 
   const center =
     filtered.length > 0
-      ? { longitude: filtered[0].longitude, latitude: filtered[0].latitude, zoom: 3 }
+      ? {
+          longitude: filtered[0].longitude,
+          latitude: filtered[0].latitude,
+          zoom: 3,
+        }
       : { longitude: 20, latitude: 20, zoom: 2 };
 
   return (
