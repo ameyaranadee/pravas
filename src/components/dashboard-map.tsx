@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import Map, { Marker, Popup } from "react-map-gl";
+import Map, { Marker, Popup, type MarkerEvent } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Image from "next/image";
 
@@ -12,12 +12,14 @@ type TripPin = {
   id: string;
   title: string;
   cover_photo_url: string | null;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
 };
 
-function MapInner({ trips }: { trips: TripPin[] }) {
-  const [selectedTrip, setSelectedTrip] = useState<TripPin | null>(null);
+type LocatedTrip = TripPin & { latitude: number; longitude: number };
+
+function MapInner({ trips }: { trips: LocatedTrip[] }) {
+  const [selectedTrip, setSelectedTrip] = useState<LocatedTrip | null>(null);
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
   // Compute center from trips
@@ -44,8 +46,8 @@ function MapInner({ trips }: { trips: TripPin[] }) {
           longitude={trip.longitude}
           latitude={trip.latitude}
           anchor="bottom"
-          onClick={(e) => {
-            e.originalEvent.stopPropagation();
+          onClick={(e: MarkerEvent) => {
+            e.originalEvent?.stopPropagation();
             setSelectedTrip(selectedTrip?.id === trip.id ? null : trip);
           }}
         >
@@ -106,10 +108,16 @@ function MapInner({ trips }: { trips: TripPin[] }) {
 }
 
 // Dynamic import to avoid SSR
-const MapInnerDynamic = dynamic(() => Promise.resolve(MapInner), { ssr: false });
+const MapInnerDynamic = dynamic<{ trips: LocatedTrip[] }>(
+  () => Promise.resolve(MapInner),
+  { ssr: false }
+);
 
 export function DashboardMap({ trips }: { trips: TripPin[] }) {
-  const pinned = trips.filter((t) => t.latitude != null && t.longitude != null);
+  const pinned = trips.filter(
+    (t): t is TripPin & { latitude: number; longitude: number } =>
+      t.latitude != null && t.longitude != null
+  );
 
   if (pinned.length === 0) return null;
 
