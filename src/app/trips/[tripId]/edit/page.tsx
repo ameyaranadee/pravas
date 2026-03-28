@@ -6,6 +6,8 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ImagePlus, X } from "lucide-react";
 import Image from "next/image";
+import { LocationSearch, type LocationValue } from "@/components/location-search";
+import { TagPicker } from "@/components/tag-picker";
 
 const TIMEZONES = [
   "Africa/Cairo",
@@ -49,6 +51,8 @@ export default function EditTripPage() {
   const [timezone, setTimezone] = useState("");
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [location, setLocation] = useState<LocationValue | null>(null);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState("");
@@ -58,23 +62,36 @@ export default function EditTripPage() {
   const router = useRouter();
 
   useEffect(() => {
-    supabase
-      .from("trips")
-      .select("title, start_date, end_date, timezone, cover_photo_url")
-      .eq("id", tripId)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          setTitle(data.title ?? "");
-          setStartDate(data.start_date ?? "");
-          setEndDate(data.end_date ?? "");
-          setOngoing(!data.end_date);
-          setTimezone(data.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
-          setCoverPreview(data.cover_photo_url ?? null);
+    Promise.all([
+      supabase
+        .from("trips")
+        .select("title, start_date, end_date, timezone, cover_photo_url, location_name, latitude, longitude")
+        .eq("id", tripId)
+        .single(),
+      supabase
+        .from("trip_tag_assignments")
+        .select("tag_id")
+        .eq("trip_id", tripId),
+    ]).then(([{ data }, { data: tagData }]) => {
+      if (data) {
+        setTitle(data.title ?? "");
+        setStartDate(data.start_date ?? "");
+        setEndDate(data.end_date ?? "");
+        setOngoing(!data.end_date);
+        setTimezone(data.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
+        setCoverPreview(data.cover_photo_url ?? null);
+        if (data.location_name && data.latitude != null && data.longitude != null) {
+          setLocation({
+            location_name: data.location_name,
+            latitude: data.latitude,
+            longitude: data.longitude,
+          });
         }
-        setFetching(false);
-      });
-  }, [tripId]);
+      }
+      setSelectedTagIds(tagData?.map((a) => a.tag_id) ?? []);
+      setFetching(false);
+    });
+  }, [tripId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,15 +133,27 @@ export default function EditTripPage() {
         end_date: ongoing ? null : endDate || null,
         timezone: timezone || null,
         cover_photo_url: coverPhotoUrl,
+        location_name: location?.location_name ?? null,
+        latitude: location?.latitude ?? null,
+        longitude: location?.longitude ?? null,
       })
       .eq("id", tripId);
 
     if (err) {
       setError(err.message);
       setLoading(false);
-    } else {
-      router.push(`/trips/${tripId}`);
+      return;
     }
+
+    // Replace tag assignments
+    await supabase.from("trip_tag_assignments").delete().eq("trip_id", tripId);
+    if (selectedTagIds.length > 0) {
+      await supabase
+        .from("trip_tag_assignments")
+        .insert(selectedTagIds.map((tagId) => ({ trip_id: tripId, tag_id: tagId })));
+    }
+
+    router.push(`/trips/${tripId}`);
   };
 
   const inputClass =
@@ -174,6 +203,11 @@ export default function EditTripPage() {
               placeholder="Tokyo Winter 2025"
               className={inputClass}
             />
+          </div>
+
+          <div>
+            <label className={labelClass}>Location</label>
+            <LocationSearch value={location} onSelect={setLocation} />
           </div>
 
           <div>
@@ -286,6 +320,11 @@ export default function EditTripPage() {
                 <span className="text-sm">Upload a cover photo</span>
               </button>
             )}
+          </div>
+
+          <div>
+            <label className={labelClass}>Tags</label>
+            <TagPicker selectedTagIds={selectedTagIds} onChange={setSelectedTagIds} />
           </div>
 
           {error && <p className="text-xs text-red-500">{error}</p>}

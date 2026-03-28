@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ImagePlus, X } from "lucide-react";
 import Image from "next/image";
+import { LocationSearch, type LocationValue } from "@/components/location-search";
+import { TagPicker } from "@/components/tag-picker";
 
 const TIMEZONES = [
   "Africa/Cairo",
@@ -48,6 +50,8 @@ export default function NewTripPage() {
   );
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [location, setLocation] = useState<LocationValue | null>(null);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -97,6 +101,9 @@ export default function NewTripPage() {
         timezone: timezone || null,
         cover_photo_url: coverPhotoUrl,
         created_by: user.id,
+        location_name: location?.location_name ?? null,
+        latitude: location?.latitude ?? null,
+        longitude: location?.longitude ?? null,
       })
       .select("id")
       .single();
@@ -104,9 +111,16 @@ export default function NewTripPage() {
     if (err) {
       setError(err.message);
       setLoading(false);
-    } else {
-      router.push(`/trips/${trip.id}`);
+      return;
     }
+
+    if (selectedTagIds.length > 0) {
+      await supabase
+        .from("trip_tag_assignments")
+        .insert(selectedTagIds.map((tagId) => ({ trip_id: trip.id, tag_id: tagId })));
+    }
+
+    router.push(`/trips/${trip.id}`);
   };
 
   const inputClass =
@@ -148,6 +162,11 @@ export default function NewTripPage() {
               placeholder="Tokyo Winter 2025"
               className={inputClass}
             />
+          </div>
+
+          <div>
+            <label className={labelClass}>Location</label>
+            <LocationSearch value={location} onSelect={setLocation} />
           </div>
 
           <div>
@@ -260,6 +279,11 @@ export default function NewTripPage() {
                 <span className="text-sm">Upload a cover photo</span>
               </button>
             )}
+          </div>
+
+          <div>
+            <label className={labelClass}>Tags</label>
+            <TagPicker selectedTagIds={selectedTagIds} onChange={setSelectedTagIds} />
           </div>
 
           {error && <p className="text-xs text-red-500">{error}</p>}

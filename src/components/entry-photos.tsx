@@ -5,7 +5,7 @@ import { ImagePlus, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
 
-const MAX_ENTRY_PHOTOS = 5;
+const MAX_ENTRY_PHOTOS = 20;
 
 type Photo = {
   id: string;
