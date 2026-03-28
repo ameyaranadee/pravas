@@ -11,8 +11,8 @@ type GeoResult = {
 
 export type LocationValue = {
   location_name: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 export function LocationSearch({
@@ -59,8 +59,12 @@ export function LocationSearch({
           `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json?types=place,locality,region,country&access_token=${token}&limit=5`
         );
         const data = await res.json();
-        setResults(data.features ?? []);
-        setOpen(true);
+        const features: GeoResult[] = data.features ?? [];
+        setResults(features);
+        setOpen(features.length > 0);
+      } catch {
+        setResults([]);
+        setOpen(false);
       } finally {
         setLoading(false);
       }
@@ -88,7 +92,7 @@ export function LocationSearch({
   return (
     <div ref={containerRef} className="relative">
       <div className="relative">
-        <MapPin className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400 pointer-events-none" />
+        <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
         <input
           type="text"
           value={query}
@@ -97,7 +101,7 @@ export function LocationSearch({
           className="w-full rounded-xl border border-stone-200 py-2.5 pl-9 pr-9 text-sm outline-none transition-colors focus:border-stone-400"
         />
         {loading && (
-          <Loader className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-stone-400 pointer-events-none" />
+          <Loader className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-stone-400" />
         )}
         {query && !loading && (
           <button
