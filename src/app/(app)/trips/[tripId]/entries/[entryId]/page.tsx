@@ -57,21 +57,20 @@ export default async function EntryPage({
     : null;
 
   return (
-    <div className="min-h-screen bg-white font-sans text-[#2D323B]">
-      {/* Navbar */}
-      <header className="mx-auto flex h-14 max-w-3xl items-center justify-between px-6">
+    <div className="min-h-full bg-white text-[#2D323B]">
+      {/* Slim breadcrumb back to trip */}
+      <div className="mx-auto max-w-3xl px-6 pt-6">
         <Link
           href={`/trips/${tripId}`}
-          className="flex items-center gap-1.5 text-sm text-stone-500 transition-colors hover:text-[#2D323B]"
+          className="inline-flex items-center gap-1.5 text-xs text-stone-400 transition-colors hover:text-[#2D323B]"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Back
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back to trip
         </Link>
-        <span className="text-sm font-medium tracking-tight">pravas</span>
-      </header>
+      </div>
 
       {/* Centered content */}
-      <div className="mx-auto max-w-3xl px-6">
+      <div className="mx-auto max-w-3xl px-6 pt-4">
         {/* Entry header */}
         <div className="mb-10 border-b border-stone-100 pb-8">
           <p className="mb-1 text-sm font-medium text-stone-400">{weekday}</p>

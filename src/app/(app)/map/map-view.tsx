@@ -5,7 +5,7 @@ import Map, { Marker, Popup, NavigationControl } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin } from "lucide-react";
+import { MapPin, ArrowLeft } from "lucide-react";
 
 type Tag = { id: string; name: string; color: string };
 
@@ -44,7 +44,16 @@ export default function MapView({
       : { longitude: 20, latitude: 20, zoom: 2 };
 
   return (
-    <div className="h-screen w-full">
+    <div className="h-full w-full">
+      {/* Back to canvas */}
+      <Link
+        href="/dashboard"
+        className="absolute left-4 top-4 z-10 flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-stone-600 shadow-sm backdrop-blur-sm transition-colors hover:bg-white"
+      >
+        <ArrowLeft className="h-3 w-3" />
+        pravas
+      </Link>
+
       <Map
         initialViewState={center}
         style={{ width: "100%", height: "100%" }}

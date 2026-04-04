@@ -1,6 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { MapView } from "./map-loader";
 
 export default async function MapPage() {
@@ -34,20 +32,7 @@ export default async function MapPage() {
   }));
 
   return (
-    <div className="relative h-screen w-full overflow-hidden font-sans">
-      {/* Floating header */}
-      <header className="absolute left-0 right-0 top-0 z-10 flex h-14 items-center justify-between px-6">
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-sm text-stone-600 shadow-sm backdrop-blur-sm transition-colors hover:text-[#2D323B]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Link>
-        <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-medium tracking-tight shadow-sm backdrop-blur-sm">
-          pravas
-        </span>
-      </header>
+    <div className="relative h-full w-full overflow-hidden">
       <MapView trips={mappedTrips} allTags={allTags ?? []} />
     </div>
   );
